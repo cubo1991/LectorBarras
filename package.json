@@ -9,16 +9,16 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio"
+    "db:generate": "node --env-file=.env.local node_modules/drizzle-kit/bin.cjs generate",
+    "db:migrate": "node --env-file=.env.local node_modules/drizzle-kit/bin.cjs migrate",
+    "db:studio": "node --env-file=.env.local node_modules/drizzle-kit/bin.cjs studio"
   },
   "dependencies": {
-    "@neondatabase/serverless": "^1.1.0",
     "bcryptjs": "^3.0.3",
     "drizzle-orm": "^0.45.3",
     "next": "16.3.6",
     "next-auth": "^5.0.0-beta.32",
+    "postgres": "^3.4.9",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "zod": "^4.6.5"

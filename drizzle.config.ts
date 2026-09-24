@@ -5,6 +5,7 @@ export default defineConfig({
   out: "./drizzle",
   dialect: "postgresql",
   dbCredentials: {
-    url: process.env.DATABASE_URL!,
+    // conexión directa (sin pgbouncer) — drizzle-kit necesita DDL/sesión, no pooling
+    url: (process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL)!,
   },
 });

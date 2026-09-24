@@ -10,8 +10,8 @@ App web de gestión de inventario por código de barras. El usuario escanea un p
 
 ## Tech Stack
 
-- Next.js 15 (App Router) + TypeScript
-- Base de datos: Vercel Postgres (Neon)
+- Next.js 16 (App Router) + TypeScript
+- Base de datos: Postgres (Supabase, vía integración de Vercel) — driver `postgres.js`
 - ORM: Drizzle
 - Auth: Auth.js (NextAuth v5), credenciales email + contraseña
 - Escaneo de código de barras: `@zxing/browser`
