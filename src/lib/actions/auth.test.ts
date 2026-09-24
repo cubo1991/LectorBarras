@@ -1,5 +1,11 @@
-import { describe, expect, it } from "vitest";
-import { registerUser } from "./auth";
+import { describe, expect, it, vi } from "vitest";
+
+// next-auth no resuelve bajo vitest (importa "next/server"); estos tests sólo
+// ejercitan la validación de registerUser, que no usa signIn/signOut.
+vi.mock("@/lib/auth", () => ({ signIn: async () => {}, signOut: async () => {} }));
+vi.mock("next-auth", () => ({ AuthError: class AuthError extends Error {} }));
+
+const { registerUser } = await import("./auth");
 
 describe("registerUser validation", () => {
   it("rejects an invalid email without touching the database", async () => {

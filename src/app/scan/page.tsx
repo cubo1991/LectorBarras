@@ -1,12 +1,15 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
+import { LogoutButton } from "@/components/LogoutButton";
 import { NewProductForm } from "@/components/NewProductForm";
 import { lookupProductByBarcode, type ProductLookupResult } from "@/lib/actions/products";
 import { adjustStock } from "@/lib/actions/stock";
 
-export default function ScanPage() {
+function ScanPageContent() {
   const [result, setResult] = useState<ProductLookupResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [adjustError, setAdjustError] = useState<string | null>(null);
@@ -19,6 +22,22 @@ export default function ScanPage() {
     setLoading(false);
   }, []);
 
+  // Entrada desde el listado de productos (/products): ?code=<barcode> abre
+  // directamente la ficha, sin pasar por la cámara.
+  const codeFromUrl = useSearchParams().get("code");
+  const alreadyLookedUp = useRef(false);
+
+  useEffect(() => {
+    if (!codeFromUrl || alreadyLookedUp.current) return;
+    alreadyLookedUp.current = true;
+    handleDetected(codeFromUrl);
+  }, [codeFromUrl, handleDetected]);
+
+  function handleReset() {
+    setResult(null);
+    setAdjustError(null);
+  }
+
   async function handleAdjust(productId: string, delta: number) {
     setAdjustError(null);
     const outcome = await adjustStock({ productId, delta });
@@ -30,10 +49,10 @@ export default function ScanPage() {
   }
 
   return (
-    <main className="mx-auto flex max-w-md flex-col gap-6 p-8">
+    <main className="mx-auto flex max-w-md flex-col gap-6 p-4 sm:p-8">
       <h1 className="text-xl font-semibold">Escanear producto</h1>
 
-      <BarcodeScanner onDetected={handleDetected} />
+      {!result && <BarcodeScanner onDetected={handleDetected} />}
 
       {loading && <p>Buscando...</p>}
 
@@ -46,14 +65,14 @@ export default function ScanPage() {
             <button
               type="button"
               onClick={() => handleAdjust(result.product.id, -1)}
-              className="border px-4 py-2"
+              className="min-h-11 flex-1 border text-lg"
             >
               -1
             </button>
             <button
               type="button"
               onClick={() => handleAdjust(result.product.id, 1)}
-              className="border px-4 py-2"
+              className="min-h-11 flex-1 border text-lg"
             >
               +1
             </button>
@@ -71,6 +90,27 @@ export default function ScanPage() {
           />
         </div>
       )}
+
+      {!loading && result && (
+        <button type="button" onClick={handleReset} className="min-h-11 border px-4 py-2">
+          Escanear otro código
+        </button>
+      )}
+
+      <div className="flex items-center justify-between gap-4 border-t pt-4">
+        <Link href="/products" className="text-sm underline">
+          Buscar productos sin escanear
+        </Link>
+        <LogoutButton />
+      </div>
     </main>
+  );
+}
+
+export default function ScanPage() {
+  return (
+    <Suspense>
+      <ScanPageContent />
+    </Suspense>
   );
 }

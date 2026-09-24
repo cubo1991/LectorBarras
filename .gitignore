@@ -47,3 +47,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# log del dev server (local)
+dev.log
+.env.local.bak
+prod.log

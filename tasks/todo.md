@@ -34,6 +34,10 @@ Ver decisiones de arquitectura y riesgos en `tasks/plan.md`.
 ### Task 2: Esquema de base de datos y conexión a Supabase Postgres ✅
 
 > Hecho. La DB real es Postgres vía la integración de Supabase en Vercel (no Neon como asumía el spec — se cambió el driver a `postgres.js`, ver commit "Cambiar driver de Neon a postgres.js"). Migración aplicada contra la DB real: las 3 tablas existen.
+>
+> **Corregido durante Task 10 — pérdida silenciosa de datos.** `client.ts` construía el cliente con `postgres(url)` a secas. `DATABASE_URL` apunta al pooler de Supabase en modo transacción (puerto 6543), donde los prepared statements de postgres-js —activados por default— no sobreviven al pooling. Efecto medido con 24 transacciones concurrentes (insert de producto + movimiento): **12 commitearon y 12 se perdieron sin lanzar ningún error**; la app recibía `ok: true` con la fila que devolvía el `RETURNING` y la fila no existía. Con `prepare: false`: 24/24. Es el riesgo "driver de conexión mal elegido" que `plan.md` marcaba como Alto, materializado como corrupción silenciosa en vez de timeouts. Se descubrió porque un e2e concurrente falló con "El producto no existe" justo después de crearlo.
+>
+> Secuencialmente **no se reproduce** (6/6 con y sin `prepare`), así que los manual checks de Tasks 5–7, que se hicieron de a una operación, no podían detectarlo.
 
 **Description:** Configurar Drizzle con `postgres.js`, definir el esquema inicial (`users`, `products`, `stock_movements`) con índices en `products.barcode` y `products.name`, y dejar el tooling de migraciones funcionando.
 
@@ -68,7 +72,13 @@ Ver decisiones de arquitectura y riesgos en `tasks/plan.md`.
 
 ### Task 3: Registro y login con Auth.js ✅
 
-> Hecho. Provider de credenciales, registro con Zod, páginas, `proxy.ts` protegiendo rutas (Next 16 renombró `middleware.ts` → `proxy.ts`). Probado de punta a punta contra la DB real (registro → hash → login → verificación de password correcta e incorrecta) y smoke test confirmó que `/` redirige a `/login` sin sesión. Verificación en el browser real (UI) queda pendiente — la extensión de Chrome no estaba conectada en esta sesión.
+> Hecho. Provider de credenciales, registro con Zod, páginas, `proxy.ts` protegiendo rutas (Next 16 renombró `middleware.ts` → `proxy.ts`). Probado de punta a punta contra la DB real (registro → hash → login → verificación de password correcta e incorrecta) y smoke test confirmó que `/` redirige a `/login` sin sesión. Registro y login **sí** quedaron verificados en browser real (por el usuario y por los e2e de Task 10).
+>
+> **DOS DEFECTOS ENCONTRADOS Y CORREGIDOS durante Task 10:**
+>
+> 1. **No existía UI de logout.** El criterio "puede loguearse en `/login` y cerrar sesión" estaba marcado como cumplido, pero `signOut` se exportaba en `src/lib/auth.ts` y **no se usaba en ningún componente**: no había botón ni ruta. Se colgó porque ese criterio se verificó con un script directo contra la DB, no por UI. Corregido: `logoutAction` + `src/components/LogoutButton.tsx`, presente en `/scan` y `/products`. Cubierto por el e2e "cierra sesión desde la app y vuelve a entrar".
+>
+> 2. **La contraseña podía terminar en la URL.** `login/page.tsx` y `register/page.tsx` eran client components cuyo `<form>` dependía del `onSubmit` de React. Si el formulario se enviaba **antes de que la página hidratara** (probable en mobile o conexión lenta), el browser hacía el submit nativo: un **GET** a `/login?email=...&password=...`, dejando la contraseña en la barra de direcciones, el historial y los logs del server. Se detectó de casualidad cuando un e2e falló y la URL del snapshot mostraba la contraseña en claro. Corregido: los dos forms pasaron a server actions (`loginAction`/`registerAction` con `useActionState`), que se envían por POST y funcionan sin JS. Cubierto por el e2e "la contraseña no viaja en la URL si el form se envía sin hidratar", que bloquea los bundles JS para reproducir la ventana sin hidratar.
 
 **Description:** Configurar Auth.js v5 con provider de credenciales (email + contraseña, hash con bcrypt), páginas de registro y login, y protección de rutas para que el resto de la app requiera sesión.
 
@@ -154,6 +164,8 @@ Ver decisiones de arquitectura y riesgos en `tasks/plan.md`.
 ### Task 6: Alta de producto nuevo ✅
 
 > Hecho. Validación Zod probada en aislado; alta + bloqueo de duplicado probados contra la DB real.
+>
+> Corregido después del checkpoint: el stock inicial no generaba un registro en `stock_movements`, así que el historial no podía explicar el stock actual — violaba el Boundary del SPEC "todo cambio de stock queda registrado (quién, cuándo, cuánto)". Ahora `createProduct` corre en una transacción y, si el stock inicial es > 0, inserta el movimiento con el usuario de la sesión. El chequeo de duplicado se movió dentro de la misma transacción. La validación Zod sigue corriendo **antes** de `auth()` para que un input inválido no consulte sesión ni DB (y para que los tests unitarios no necesiten next-auth).
 
 **Description:** Formulario y server action para dar de alta un producto (código de barras, nombre, stock inicial) cuando el escaneo no encuentra coincidencia.
 
@@ -205,23 +217,32 @@ Ver decisiones de arquitectura y riesgos en `tasks/plan.md`.
 
 ## Checkpoint: Flujo core
 - [x] Flujo completo funciona a mano: loguearse → escanear → (producto existe: ver stock, ajustar) o (no existe: dar de alta) → el movimiento queda registrado (verificado con scripts directos contra la DB real; falta la vuelta completa en un browser real con cámara — ver Task 4 y Task 9)
-- [ ] Revisión con el usuario antes de seguir
+- [x] Revisión con el usuario antes de seguir — el usuario recorrió el flujo en el browser (registro, login, alta, ajuste) y reportó dos defectos, ya corregidos:
+  - `NewProductForm` tenía `defaultValue={0}` en el stock inicial: el `0` quedaba pegado adelante de lo tipeado. Ahora arranca vacío.
+  - `/scan` no tenía forma de volver al escáner: el estado `result` nunca se limpiaba. Se agregó "Escanear otro código" y se oculta el scanner mientras hay un resultado.
+  - Defecto adicional encontrado al revisar los datos (violaba el Boundary "todo cambio de stock queda registrado"): el stock inicial del alta no generaba movimiento. Corregido en Task 6.
 
 ## Phase 4: Búsqueda y pulido
 
-### Task 8: Búsqueda de productos por nombre/código sin escanear
+### Task 8: Búsqueda de productos por nombre/código sin escanear ✅
+
+> Hecho. `searchProducts` busca por código exacto (`=`) u OR nombre parcial (`ilike %q%`), ordena por nombre y pagina de 20. Verificado contra la DB real con un catálogo de 152 productos.
+>
+> Nota sobre el criterio de 5000 productos: la búsqueda por código usa `Index Scan` sobre `products_barcode_idx`, pero el `ilike '%q%'` del nombre hace `Seq Scan` — un índice btree no sirve con wildcard adelante, al contrario de lo que asumía `plan.md`. Con 152 filas el `explain analyze` da 0.28ms y con 5000 seguiría en pocos ms, así que el criterio se cumple; si el catálogo creciera mucho más, la solución es un índice GIN con `pg_trgm` (requiere migración → Boundary "ask first").
+>
+> `PRODUCTS_PAGE_SIZE` vive en `src/lib/pagination.ts` y no en el action: un módulo `"use server"` sólo puede exportar funciones async, exportar la constante ahí rompía el build.
 
 **Description:** Página de listado/búsqueda de productos (por nombre o código), paginada, para no depender siempre de la cámara.
 
 **Acceptance criteria:**
-- [ ] Buscar por nombre parcial o código exacto devuelve resultados relevantes
-- [ ] El listado pagina (no trae los 5000 productos de una)
-- [ ] Cada resultado permite ir al detalle/ajuste de stock (Task 7)
+- [x] Buscar por nombre parcial o código exacto devuelve resultados relevantes
+- [x] El listado pagina (no trae los 5000 productos de una) — 20 por página, `limit`/`offset` en la query
+- [x] Cada resultado permite ir al detalle/ajuste de stock (Task 7) — el link va a `/scan?code=<barcode>`, que abre la ficha sin pasar por la cámara
 
 **Verification:**
-- [ ] Tests pass: `npm test` (búsqueda por nombre parcial, por código, sin resultados)
-- [ ] Build succeeds: `npm run build`
-- [ ] Manual check: buscar con un catálogo de prueba con >100 productos
+- [x] Tests pass: `npm test` (nombre parcial, código exacto, sin resultados, límite/offset de paginación, `page` como string)
+- [x] Build succeeds: `npm run build`
+- [x] Manual check: verificado contra la DB real con 152 productos — 'lech' → 11, 'queso' → 10, código exacto → 1, inexistente → 0, sin query → 8 páginas (20 + 12 en la última)
 
 **Dependencies:** Task 2, Task 7
 
@@ -233,18 +254,26 @@ Ver decisiones de arquitectura y riesgos en `tasks/plan.md`.
 
 ---
 
-### Task 9: Manejo de permisos de cámara y verificación mobile
+### Task 9: Manejo de permisos de cámara y verificación mobile ⚠️ parcial
+
+> Código hecho. Faltan los dos manual checks, que necesitan un browser real y un celular.
+>
+> `src/lib/scanner.ts` ahora traduce el error de `getUserMedia` a un mensaje accionable según el caso: permiso denegado (`NotAllowedError`/`SecurityError`), sin cámara en el dispositivo (`NotFoundError`/`OverconstrainedError`), cámara ocupada por otra app (`NotReadableError`), y HTTP sin contexto seguro (`getUserMedia` no existe). Todos ofrecen el ingreso manual.
+>
+> **Bug corregido en `BarcodeScanner`:** cualquier excepción de decodificación que no fuera `NotFoundException` seteaba el error de cámara, y como el `<video>` se renderizaba condicionalmente, eso lo **desmontaba y dejaba al reader sin destino** — un solo frame con checksum o formato malo (algo normal apuntando a un código dañado o con poca luz) apagaba la cámara para siempre. Ahora `ChecksumException` y `FormatException` también se tratan como transitorias, y un error de lectura no fatal muestra un aviso sin desmontar el video.
+>
+> Nota: el chequeo de contexto seguro se lanza como excepción (`insecureContextError`) en vez de setear estado en el effect, para no violar `react-hooks/set-state-in-effect` y para no romper la hidratación (en el server `navigator` no existe, así que un inicializador de `useState` daría mismatch).
 
 **Description:** Pulir el manejo de errores de permiso de cámara (denegado, no disponible, HTTPS requerido) y verificar el flujo completo en un navegador mobile real.
 
 **Acceptance criteria:**
-- [ ] Si se deniega el permiso de cámara, se muestra un mensaje claro y el input manual sigue funcionando
-- [ ] El flujo de escaneo se probó en un celular real (Chrome Android o Safari iOS)
-- [ ] La UI es usable en pantallas chicas (sin scroll horizontal, botones alcanzables)
+- [x] Si se deniega el permiso de cámara, se muestra un mensaje claro y el input manual sigue funcionando
+- [ ] El flujo de escaneo se probó en un celular real (Chrome Android o Safari iOS) — **pendiente, necesita celular + HTTPS**
+- [x] La UI es usable en pantallas chicas (sin scroll horizontal, botones alcanzables) — padding `p-4 sm:p-8`, botones con `min-h-11` (mínimo táctil), `+1`/`-1` a ancho completo, form del código con `flex-wrap` y `min-w-0` para que no desborde
 
 **Verification:**
-- [ ] Manual check: probar en un celular real con la app desplegada (Vercel preview) o en HTTPS local
-- [ ] Manual check: denegar el permiso de cámara a propósito y confirmar que no rompe la página
+- [ ] Manual check: probar en un celular real con la app desplegada (Vercel preview) o en HTTPS local — **pendiente**
+- [ ] Manual check: denegar el permiso de cámara a propósito y confirmar que no rompe la página — **pendiente** (cubierto por unit tests sobre el mapeo de errores, pero no probado en un browser real)
 
 **Dependencies:** Task 4, Task 8
 
@@ -256,16 +285,32 @@ Ver decisiones de arquitectura y riesgos en `tasks/plan.md`.
 
 ---
 
-### Task 10: Tests e2e de los flujos críticos
+### Task 10: Tests e2e de los flujos críticos ✅
+
+> Hecho: 14 tests en verde. Usan el ingreso manual del código (headless no tiene cámara), que es el fallback que el SPEC pide igual.
+>
+> Tres cosas de infraestructura que hubo que resolver, todas del entorno y no del código de la app:
+> 1. **`webServer` pasó de `npm run dev` a `npm run build && npm run start`.** Con el dev server cada ruta se compila en el primer request (decenas de segundos en este disco) y el evento `load` no llegaba: 12 de 14 tests morían por timeout navegando. Además dejaba ventanas donde el click caía antes de que React hidratara y el form hacía un **GET nativo** — con la contraseña en la query string.
+> 2. **`workers: 2`.** Con los workers por default (mitad de los cores) cada uno levanta su Chromium y todos pelean por el mismo server; con ~3GB libres se ahogaban.
+> 3. **`AUTH_TRUST_HOST=true` en el env del `webServer`.** En producción Auth.js exige confiar el host explícitamente (en Vercel lo hace solo); sin eso `next start` en localhost responde `UntrustedHost` y todo login termina en `/api/auth/error`. Se puso en la config de test y **no** en `auth.ts`, para no bajarle esa verificación a la app.
+>
+> Los e2e corren contra la DB de desarrollo y dejan datos etiquetados. Para limpiarlos:
+> ```sql
+> delete from stock_movements where product_id in (select id from products where name like '[E2E]%');
+> delete from products where name like '[E2E]%';
+> delete from users where email like 'e2e-%@example.test';
+> ```
+>
+> Ruido esperado en la salida: `[auth][error] CredentialsSignin`, que es el login rechazado a propósito por el test de contraseña incorrecta.
 
 **Description:** Tests Playwright de los flujos que rompen el inventario si fallan: login, escanear→ajustar stock (con cámara mockeada), alta de producto, búsqueda.
 
 **Acceptance criteria:**
-- [ ] `npm run test:e2e` corre y pasa en CI/local sin cámara real (mock de `getUserMedia` o input manual)
-- [ ] Cubre: login, ajuste de stock end-to-end, alta de producto, búsqueda
+- [x] `npm run test:e2e` corre y pasa en CI/local sin cámara real (usa el ingreso manual del código)
+- [x] Cubre: login, ajuste de stock end-to-end, alta de producto, búsqueda
 
 **Verification:**
-- [ ] Tests pass: `npm run test:e2e`
+- [x] Tests pass: `npm run test:e2e` — 14/14
 
 **Dependencies:** Task 3, Task 6, Task 7, Task 8
 
@@ -279,6 +324,14 @@ Ver decisiones de arquitectura y riesgos en `tasks/plan.md`.
 ---
 
 ## Checkpoint: Completo
-- [ ] Todos los criterios de éxito del SPEC.md están cumplidos
-- [ ] `npm run lint`, `npm test` y `npm run test:e2e` pasan
+- [ ] Todos los criterios de éxito del SPEC.md están cumplidos — faltan los dos que dependen de la cámara/mobile (ver abajo); el de 5000 productos se verificó por plan de query con 152 filas, no con un catálogo de 5000 real
+- [x] `npm run lint`, `npm test` y `npm run test:e2e` pasan — 29 unit, 15 e2e, lint sin warnings, build OK
 - [ ] Listo para review final
+
+### Lo único que falta del plan (todo requiere un browser/celular real)
+- Task 4: escanear un código de barras real con cámara (celular y webcam de notebook)
+- Task 9: probar el flujo en un celular real — necesita HTTPS, o sea un deploy (Vercel preview) o un túnel HTTPS local
+- Task 9: denegar el permiso de cámara a propósito y confirmar que la página no rompe
+
+### Fuera del plan, pero bloquea el deploy
+`src/proxy.ts` importa `auth` desde `@/lib/auth`, que arrastra el driver TCP `postgres` y `bcryptjs` al middleware. En dev (runtime Node) funciona; en Vercel el middleware corre en Edge y un driver TCP no. `plan.md` ya marcaba este riesgo como Alto y proponía `neon-http`, pero el código terminó con `postgres-js`. El arreglo estándar es partir la config de Auth.js: una `auth.config.ts` sin acceso a DB para el proxy, y la completa sólo en rutas Node. Hay que resolverlo **antes** de poder hacer el deploy que Task 9 necesita.

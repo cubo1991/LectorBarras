@@ -1,5 +1,10 @@
-import { describe, expect, it } from "vitest";
-import { createProduct } from "./products";
+import { describe, expect, it, vi } from "vitest";
+
+// next-auth no resuelve bajo vitest (importa "next/server"), y estos tests sólo
+// ejercitan la validación, que corre antes de consultar la sesión.
+vi.mock("@/lib/auth", () => ({ auth: async () => null }));
+
+const { createProduct } = await import("./products");
 
 describe("createProduct validation", () => {
   it("rejects a non-numeric barcode without touching the database", async () => {

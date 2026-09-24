@@ -38,13 +38,12 @@ export function NewProductForm({ barcode, onCreated }: Props) {
         name="stock"
         type="number"
         min={0}
-        defaultValue={0}
         placeholder="Stock inicial"
         required
         className="border p-2"
       />
       {error && <p className="text-sm text-red-600">{error}</p>}
-      <button type="submit" className="bg-black p-2 text-white">
+      <button type="submit" className="min-h-11 bg-black p-2 text-white">
         Dar de alta
       </button>
     </form>
