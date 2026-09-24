@@ -31,7 +31,9 @@ Ver decisiones de arquitectura y riesgos en `tasks/plan.md`.
 
 ---
 
-### Task 2: Esquema de base de datos y conexión a Neon
+### Task 2: Esquema de base de datos y conexión a Neon ⚠️ parcial
+
+> Schema, cliente y migración inicial listos y validados (`npm run db:generate` corrió sin errores). Falta aplicar `npm run db:migrate` contra una DB real — necesita que el usuario cree una Postgres en Vercel/Neon y ponga el `DATABASE_URL` en `.env.local` (no versionado, ver `.env.example`).
 
 **Description:** Configurar Drizzle con el driver `neon-http`, definir el esquema inicial (`users`, `products`, `stock_movements`) con índices en `products.barcode` y `products.name`, y dejar el tooling de migraciones funcionando.
 
