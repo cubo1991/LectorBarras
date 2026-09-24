@@ -66,7 +66,9 @@ Ver decisiones de arquitectura y riesgos en `tasks/plan.md`.
 
 ## Phase 2: Autenticación
 
-### Task 3: Registro y login con Auth.js
+### Task 3: Registro y login con Auth.js ⚠️ parcial
+
+> Código completo (provider de credenciales, registro con Zod, páginas, `proxy.ts` protegiendo rutas). Build/lint/tests unitarios en verde, y smoke test manual confirmó que `/` redirige a `/login` sin sesión y que ambas páginas renderizan. Falta probar el flujo real de registro→login contra una DB (bloqueado por lo mismo que Task 2: no hay `DATABASE_URL` real todavía). Nota: `src/middleware.ts` del plan original pasó a llamarse `src/proxy.ts` — Next.js 16 renombró la convención.
 
 **Description:** Configurar Auth.js v5 con provider de credenciales (email + contraseña, hash con bcrypt), páginas de registro y login, y protección de rutas para que el resto de la app requiera sesión.
 
