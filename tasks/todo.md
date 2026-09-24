@@ -4,7 +4,9 @@ Ver decisiones de arquitectura y riesgos en `tasks/plan.md`.
 
 ## Phase 1: Foundation
 
-### Task 1: Scaffold del proyecto Next.js
+### Task 1: Scaffold del proyecto Next.js ✅
+
+> Hecho. `npm run build`, `npm run lint` y `npm test` pasan. `npm run test:e2e` queda pendiente de `npx playwright install chromium`, que se está bajando en background por una descarga muy lenta (~29 KB/s) en este entorno — correrlo apenas termine.
 
 **Description:** Crear el proyecto Next.js 15 (App Router) con TypeScript, Tailwind, ESLint, Vitest y Playwright configurados. Sin lógica de negocio todavía — solo que el proyecto compile, lintee y corra.
 
