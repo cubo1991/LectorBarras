@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
+import { NewProductForm } from "@/components/NewProductForm";
 import { lookupProductByBarcode, type ProductLookupResult } from "@/lib/actions/products";
 
 export default function ScanPage() {
@@ -32,8 +33,12 @@ export default function ScanPage() {
       )}
 
       {!loading && result && !result.found && (
-        <div className="border p-4">
+        <div className="flex flex-col gap-3">
           <p>No existe un producto con el código {result.barcode}.</p>
+          <NewProductForm
+            barcode={result.barcode}
+            onCreated={(product) => setResult({ found: true, product })}
+          />
         </div>
       )}
     </main>
