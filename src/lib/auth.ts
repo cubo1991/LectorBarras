@@ -1,13 +1,29 @@
-import NextAuth from "next-auth";
+import NextAuth, { type DefaultSession } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { users } from "@/lib/db/schema";
 import { verifyPassword } from "@/lib/password";
 
+declare module "next-auth" {
+  interface Session {
+    user: { id: string } & DefaultSession["user"];
+  }
+}
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   session: { strategy: "jwt" },
   pages: { signIn: "/login" },
+  callbacks: {
+    jwt({ token, user }) {
+      if (user) token.id = user.id;
+      return token;
+    },
+    session({ session, token }) {
+      session.user.id = token.id as string;
+      return session;
+    },
+  },
   providers: [
     Credentials({
       credentials: {

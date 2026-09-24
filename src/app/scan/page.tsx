@@ -4,17 +4,30 @@ import { useCallback, useState } from "react";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { NewProductForm } from "@/components/NewProductForm";
 import { lookupProductByBarcode, type ProductLookupResult } from "@/lib/actions/products";
+import { adjustStock } from "@/lib/actions/stock";
 
 export default function ScanPage() {
   const [result, setResult] = useState<ProductLookupResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const [adjustError, setAdjustError] = useState<string | null>(null);
 
   const handleDetected = useCallback(async (barcode: string) => {
     setLoading(true);
+    setAdjustError(null);
     const lookup = await lookupProductByBarcode(barcode);
     setResult(lookup);
     setLoading(false);
   }, []);
+
+  async function handleAdjust(productId: string, delta: number) {
+    setAdjustError(null);
+    const outcome = await adjustStock({ productId, delta });
+    if (!outcome.ok) {
+      setAdjustError(outcome.error);
+      return;
+    }
+    setResult({ found: true, product: outcome.product });
+  }
 
   return (
     <main className="mx-auto flex max-w-md flex-col gap-6 p-8">
@@ -25,10 +38,27 @@ export default function ScanPage() {
       {loading && <p>Buscando...</p>}
 
       {!loading && result?.found && (
-        <div className="border p-4">
+        <div className="flex flex-col gap-3 border p-4">
           <p className="font-medium">{result.product.name}</p>
           <p className="text-sm text-gray-600">Código: {result.product.barcode}</p>
           <p className="text-sm text-gray-600">Stock actual: {result.product.stock}</p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => handleAdjust(result.product.id, -1)}
+              className="border px-4 py-2"
+            >
+              -1
+            </button>
+            <button
+              type="button"
+              onClick={() => handleAdjust(result.product.id, 1)}
+              className="border px-4 py-2"
+            >
+              +1
+            </button>
+          </div>
+          {adjustError && <p className="text-sm text-red-600">{adjustError}</p>}
         </div>
       )}
 
