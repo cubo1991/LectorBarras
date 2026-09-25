@@ -268,18 +268,20 @@ Spec: `SPEC-front.md` · Plan y decisiones: `tasks/plan-front.md`
 
 ---
 
-### Task 10: Accesibilidad AA con axe en claro y oscuro
+### Task 10: Accesibilidad AA con axe en claro y oscuro ✅
+
+> Hecho; 0 violaciones AA en las 5 pantallas + alta + ficha con error, en claro y oscuro (23 e2e en verde en total). Se instaló `@axe-core/playwright` (aprobado en la spec). **El test se probó con una mutación:** subir el gris de `--muted` a `#b4b4bb` en `globals.css` hace fallar `color-contrast` (revertido). El test también verifica que el esquema emulado sea el pedido, para que "dark" no termine probando claro. Falta el check manual con Tab en `/scan`.
 
 **Description:** Instalar `@axe-core/playwright` (dependencia ya aprobada en la spec) y escribir `a11y.spec.ts`: cada pantalla se analiza con etiquetas `wcag2a`, `wcag2aa`, `wcag21aa` en esquema claro y oscuro (`page.emulateMedia({ colorScheme })`). Corregir las violaciones que aparezcan.
 
 **Acceptance criteria:**
-- [ ] `a11y.spec.ts` recorre `/login`, `/register`, `/`, `/scan`, `/products` en ambos esquemas con 0 violaciones
-- [ ] Todo input tiene `<label>` asociado; foco visible en todos los controles; ninguna información depende sólo del color
-- [ ] Las violaciones se corrigen en el código o en los tokens, no excluyendo reglas del análisis
+- [x] `a11y.spec.ts` recorre `/login`, `/register`, `/`, `/scan`, `/products` en ambos esquemas con 0 violaciones
+- [x] Todo input tiene `<label>` asociado; foco visible en todos los controles; ninguna información depende sólo del color
+- [x] Las violaciones se corrigen en el código o en los tokens, no excluyendo reglas del análisis
 
 **Verification:**
-- [ ] E2E: `npm run test:e2e -- e2e/a11y.spec.ts`
-- [ ] E2E: `npm run test:e2e` completo
+- [x] E2E: `npm run test:e2e -- e2e/a11y.spec.ts`
+- [x] E2E: `npm run test:e2e` completo
 - [ ] Manual check: recorrer `/scan` con teclado (Tab) y comprobar el foco visible
 
 **Dependencies:** Tasks 3, 4, 5, 6, 9
@@ -295,7 +297,7 @@ Spec: `SPEC-front.md` · Plan y decisiones: `tasks/plan-front.md`
 
 ## Checkpoint: Completo
 - [ ] Los 9 criterios de éxito de `SPEC-front.md` cumplidos
-- [ ] `npm run lint`, `npm test`, `npm run test:e2e`, `npm run build` en verde
+- [x] `npm run lint`, `npm test` (42), `npm run test:e2e` (23), `npm run build` en verde
 - [ ] Probado en celular real: app instalada, escaneo con feedback, modo oscuro con poca luz
 - [ ] Deploy de producción verificado
 - [ ] Listo para review final
