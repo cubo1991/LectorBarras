@@ -1,10 +1,8 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
-import { LogoutButton } from "@/components/LogoutButton";
 import { NewProductForm } from "@/components/NewProductForm";
 import { lookupProductByBarcode, type ProductLookupResult } from "@/lib/actions/products";
 import { adjustStock } from "@/lib/actions/stock";
@@ -120,12 +118,6 @@ function ScanPageContent() {
         </button>
       )}
 
-      <div className="flex items-center justify-between gap-4 border-t pt-4">
-        <Link href="/products" className="text-sm underline">
-          Buscar productos sin escanear
-        </Link>
-        <LogoutButton />
-      </div>
     </main>
   );
 }

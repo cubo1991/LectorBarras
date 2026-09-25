@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { LogoutButton } from "@/components/LogoutButton";
 import { searchProducts } from "@/lib/actions/products";
 
 type Props = {
@@ -84,13 +83,6 @@ export default async function ProductsPage({ searchParams }: Props) {
           )}
         </>
       )}
-
-      <div className="flex items-center justify-between gap-4 border-t pt-4">
-        <Link href="/scan" className="text-sm underline">
-          Escanear un código
-        </Link>
-        <LogoutButton />
-      </div>
     </main>
   );
 }
