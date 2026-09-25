@@ -2,6 +2,8 @@ import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./e2e",
+  // Genera los videos de la cámara falsa (e2e/fixtures/make-videos.ts).
+  globalSetup: "./e2e/global-setup.ts",
   fullyParallel: true,
   reporter: "list",
   // El dev server de Turbopack compila cada ruta la primera vez que se pide, y

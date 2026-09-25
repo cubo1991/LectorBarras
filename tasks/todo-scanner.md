@@ -67,19 +67,23 @@ Spec: `SPEC-scanner.md` · Plan y decisiones: `tasks/plan-scanner.md`
 
 ## Phase 2: Infraestructura de cámara y marco funcional
 
-### Task 3: Cámara falsa para e2e (generador de video + config + prueba base)
+### Task 3: Cámara falsa para e2e (generador de video + config + prueba base) ✅
+
+> Hecho; 27 e2e en verde. **La cámara falsa funciona en este entorno** (Windows, chromium headless): el escáner actual lee un EAN-13 sintético y muestra 'No existe…' con ese código. El manual check de mirar el video se reemplazó por la propia lectura (si zxing decodifica el código, el video es legible). Hallazgos: `@zxing/library` sólo trae el escritor de QR (los de 1D están comentados), así que EAN-13 y Code 128 se codifican en `make-videos.ts` (Code 128 reutiliza `Code128Reader.CODE_PATTERNS`); `launchOptions` no se puede cambiar por `describe`, por eso el fixture `cameraPage(video)` (`e2e/fixtures/camera.ts`) lanza un Chromium por test; `next build` también tipa `e2e/`, así que los tipos de estos archivos importan.
+
+> Hecho; 27 e2e en verde. **La cámara falsa funciona en este entorno** (Windows, chromium headless): el escáner actual lee un EAN-13 sintético y muestra 'No existe…' con ese código. El manual check de mirar el video se reemplazó por la propia lectura (si zxing decodifica el código, el video es legible). Hallazgos: `@zxing/library` sólo trae el escritor de QR (los de 1D están comentados), así que EAN-13 y Code 128 se codifican en `make-videos.ts` (Code 128 reutiliza `Code128Reader.CODE_PATTERNS`); `launchOptions` no se puede cambiar por `describe`, por eso el fixture `cameraPage(video)` (`e2e/fixtures/camera.ts`) lanza un Chromium por test; `next build` también tipa `e2e/`. **Carrera corregida en un e2e de la Task 2:** el test de UPC-A/EAN-13 esperaba `Código: …`, texto que el formulario de alta también muestra, así que navegaba con el alta todavía en vuelo y fallaba 3 de cada 4 veces con `--repeat-each`. Se descartó un problema de la base con mediciones (40/40 lecturas consistentes tras escribir); el test ahora espera `Stock actual`.
 
 **Description:** Poder probar la lectura de verdad. Un script genera videos y4m sintéticos (fondo claro + uno o dos códigos dibujados con el `MultiFormatWriter` de `@zxing/library`) en una carpeta ignorada por git, en `globalSetup`. Un proyecto de Playwright arranca Chromium con `--use-fake-device-for-media-stream --use-fake-ui-for-media-stream --use-file-for-fake-video-capture=<video>`. Prueba base contra el **escáner actual**: un EAN-13 centrado se lee y aparece el producto.
 
 **Acceptance criteria:**
-- [ ] El generador produce, sin dependencias nuevas, videos y4m para: EAN-13 centrado, EAN-13 en un rincón, dos EAN-13 (uno centrado, otro en el rincón), Code 128 alfanumérico centrado
-- [ ] `e2e/scanner.spec.ts` (proyecto de cámara) arranca con permiso de cámara concedido y ve el video
-- [ ] El escáner actual lee el EAN-13 centrado y muestra la ficha del producto (o "No existe…" con ese código)
-- [ ] Los videos generados no se commitean (`.gitignore`)
+- [x] El generador produce, sin dependencias nuevas, videos y4m para: EAN-13 centrado, EAN-13 en un rincón, dos EAN-13 (uno centrado, otro en el rincón), Code 128 alfanumérico centrado
+- [x] `e2e/scanner.spec.ts` (proyecto de cámara) arranca con permiso de cámara concedido y ve el video
+- [x] El escáner actual lee el EAN-13 centrado y muestra la ficha del producto (o "No existe…" con ese código)
+- [x] Los videos generados no se commitean (`.gitignore`)
 
 **Verification:**
-- [ ] E2E: `npx playwright test e2e/scanner.spec.ts`
-- [ ] E2E: `npm run test:e2e` completo (los otros proyectos no se afectan)
+- [x] E2E: `npx playwright test e2e/scanner.spec.ts`
+- [x] E2E: `npm run test:e2e` completo (los otros proyectos no se afectan)
 - [ ] Manual check: abrir uno de los videos generados en un visor y confirmar que el código es legible
 
 **Dependencies:** None (riesgo alto: se hace temprano)

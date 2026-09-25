@@ -29,6 +29,9 @@ test("un UPC-A de 12 dígitos y su EAN-13 equivalente son el mismo producto", as
   await page.getByPlaceholder("Nombre del producto").fill(`${E2E_PRODUCT_PREFIX} upc`);
   await page.getByPlaceholder("Stock inicial").fill("2");
   await page.getByRole("button", { name: "Dar de alta" }).click();
+  // "Código: …" también lo muestra el formulario de alta: esperar la ficha (que trae el
+  // stock) evita navegar mientras el alta todavía está en vuelo.
+  await expect(page.getByText("Stock actual: 2")).toBeVisible();
   await expect(page.getByText(`Código: ${ean13}`)).toBeVisible();
 
   // Buscarlo por el EAN-13 o por los 12 dígitos encuentra el mismo producto.

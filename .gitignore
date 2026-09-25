@@ -52,3 +52,6 @@ next-env.d.ts
 dev.log
 .env.local.bak
 prod.log
+
+# videos sintéticos de la cámara falsa (se generan en globalSetup)
+/e2e/.fixtures/
