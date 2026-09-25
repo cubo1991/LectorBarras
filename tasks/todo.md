@@ -328,6 +328,9 @@ Ver decisiones de arquitectura y riesgos en `tasks/plan.md`.
 - [x] `npm run lint`, `npm test` y `npm run test:e2e` pasan — 29 unit, 15 e2e, lint sin warnings, build OK
 - [ ] Listo para review final
 
+### Deploy hecho
+Producción en https://lectorbarras.vercel.app (proyecto `lectorbarras`, repo conectado: cada push a `master` redespliega). Verificado con curl: `/` redirige a `/login` (el proxy funciona en Vercel) y `/login` responde 200. Variables cargadas en Production: `DATABASE_URL`, `AUTH_SECRET`. Usa la misma DB que desarrollo.
+
 ### Lo único que falta del plan (todo requiere un browser/celular real)
 - Task 4: escanear un código de barras real con cámara (celular y webcam de notebook)
 - Task 9: probar el flujo en un celular real — necesita HTTPS, o sea un deploy (Vercel preview) o un túnel HTTPS local
