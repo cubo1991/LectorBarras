@@ -32,18 +32,20 @@ Spec: `SPEC-front.md` · Plan y decisiones: `tasks/plan-front.md`
 
 ---
 
-### Task 2: UI kit base + pantallas de login y registro
+### Task 2: UI kit base + pantallas de login y registro ✅
+
+> Hecho; 15 e2e y 38 unit en verde. Pendiente sólo el check manual (claro/oscuro, teclado, 360 px), que se hace en el checkpoint con el usuario. Extra: se agregaron los links cruzados Login ↔ Registro (antes no había forma de pasar de una a otra) y `autoComplete` en los campos.
 
 **Description:** Crear `Button`, `Field` (label + input + error accesible) y `Alert`, y usarlos para rediseñar `/login` y `/register` (las pantallas más simples, ideales para validar el kit). Cada input gana `<label>` visible **conservando el placeholder actual**. Los formularios siguen siendo `<form action={formAction}>` con server actions.
 
 **Acceptance criteria:**
-- [ ] `Field` asocia label↔input (`htmlFor`/`id`) y expone el error con `aria-invalid` + `aria-describedby` + `role="alert"`
-- [ ] `/login` y `/register` usan el kit, con estado "pendiente" en el botón y errores vía `Alert`; controles ≥ 44 px
-- [ ] Los formularios siguen enviándose por POST sin hidratar (el e2e "la contraseña no viaja en la URL…" pasa)
+- [x] `Field` asocia label↔input (`htmlFor`/`id`) y expone el error con `aria-invalid` + `aria-describedby` + `role="alert"`
+- [x] `/login` y `/register` usan el kit, con estado "pendiente" en el botón y errores vía `Alert`; controles ≥ 44 px
+- [x] Los formularios siguen enviándose por POST sin hidratar (el e2e "la contraseña no viaja en la URL…" pasa)
 
 **Verification:**
-- [ ] Tests pass: `npm test`
-- [ ] E2E: `npm run test:e2e -- e2e/login.spec.ts`
+- [x] Tests pass: `npm test`
+- [x] E2E: `npm run test:e2e -- e2e/login.spec.ts`
 - [ ] Manual check: `/login` y `/register` en 360 px, claro y oscuro, navegando sólo con teclado (foco visible)
 
 **Dependencies:** Task 1
