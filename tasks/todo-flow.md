@@ -123,20 +123,22 @@ Spec: `SPEC-flow.md` · Plan y decisiones: `tasks/plan-flow.md`
 
 ---
 
-### Task 5: Deshacer
+### Task 5: Deshacer ✅
+
+> Hecho; 119 unit, 5 `test:db` y 50 e2e en verde. `Toast` (posición fija sobre la barra de navegación, `role=status`) con pausa por foco o puntero. E2E: aparece '[nombre]: 2 → 7 · Deshacer' y deshacer restaura; se va solo a los ~6 s; **no se va mientras tiene el foco**; y el caso de **otra persona que movió el stock** (segunda sesión resta 12) → 'El stock cambió: no se puede deshacer' sin tocar nada. Que el inverso deja **dos movimientos** lo prueba `test:db` (Task 1). Axe y el chequeo de 44 px/desborde a 360 px corren con el aviso a la vista. Manual pendiente: alcanzar 'Deshacer' con el pulgar.
 
 **Description:** Tras cualquier ajuste aparece un aviso de 6 s "Leche entera: 12 → 13 · Deshacer" (componente `Toast`, `aria-live`, pausa mientras el foco está en él). "Deshacer" llama a `adjustStock` con `-delta`. Si el inverso dejaría stock negativo (alguien movió el producto entretanto) se informa y no se aplica.
 
 **Acceptance criteria:**
-- [ ] El aviso aparece tras cada ajuste, muestra stock anterior → nuevo y desaparece a los 6 s
-- [ ] "Deshacer" restaura el stock anterior; queda registrado como un movimiento inverso (verificado en `test:db`)
-- [ ] Si el inverso no es posible, el aviso lo dice ("El stock cambió: no se puede deshacer") y el stock no se toca
-- [ ] El aviso es alcanzable con teclado y no desaparece mientras tiene el foco
-- [ ] El aviso no tapa la barra de navegación ni los controles de la ficha
+- [x] El aviso aparece tras cada ajuste, muestra stock anterior → nuevo y desaparece a los 6 s
+- [x] "Deshacer" restaura el stock anterior; queda registrado como un movimiento inverso (verificado en `test:db`)
+- [x] Si el inverso no es posible, el aviso lo dice ("El stock cambió: no se puede deshacer") y el stock no se toca
+- [x] El aviso es alcanzable con teclado y no desaparece mientras tiene el foco
+- [x] El aviso no tapa la barra de navegación ni los controles de la ficha
 
 **Verification:**
-- [ ] Tests pass: `npm test` y `npm run test:db` (ajuste + inverso = dos movimientos)
-- [ ] E2E: `npm run test:e2e` (ajustar → deshacer → stock original) y `e2e/a11y.spec.ts` con el aviso visible
+- [x] Tests pass: `npm test` y `npm run test:db` (ajuste + inverso = dos movimientos)
+- [x] E2E: `npm run test:e2e` (ajustar → deshacer → stock original) y `e2e/a11y.spec.ts` con el aviso visible
 - [ ] Manual check: alcanzar "Deshacer" con el pulgar en el celular
 
 **Dependencies:** Task 4
@@ -151,7 +153,7 @@ Spec: `SPEC-flow.md` · Plan y decisiones: `tasks/plan-flow.md`
 ---
 
 ## Checkpoint: Consulta
-- [ ] La cámara no se reinicia; el mismo código no dispara búsquedas repetidas; ajustar y deshacer funcionan
+- [x] La cámara no se reinicia; el mismo código no dispara búsquedas repetidas; ajustar y deshacer funcionan (automatizado)
 - [ ] Revisión con el usuario
 
 ## Phase 3: Modo recepción y ayuda

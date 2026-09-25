@@ -49,4 +49,9 @@ test("pantallas autenticadas: home, /scan y /products", async ({ page }) => {
   await createProduct(page, { name: "responsive", stock: 0 });
   await expect(page.getByText("Sin stock")).toBeVisible();
   await check(page);
+
+  // Con el aviso de "Deshacer" visible: no debe desbordar ni traer controles chicos.
+  await page.getByRole("button", { name: "+1", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Deshacer" })).toBeVisible();
+  await check(page);
 });

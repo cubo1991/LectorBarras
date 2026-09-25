@@ -5,8 +5,18 @@ import { useSearchParams } from "next/navigation";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { ProductPanel } from "@/components/ProductPanel";
 import { Alert } from "@/components/ui/Alert";
+import { Toast } from "@/components/ui/Toast";
 import { lookupProductByBarcode, type ProductLookupResult } from "@/lib/actions/products";
 import { adjustStock } from "@/lib/actions/stock";
+
+/** Cuánto dura el aviso de "Deshacer" (se pausa mientras tiene el foco o el puntero). */
+const UNDO_TOAST_MS = 6000;
+
+type Notice = {
+  message: string;
+  /** Sólo el aviso de un ajuste tiene acción de deshacer. */
+  undo?: { productId: string; delta: number };
+};
 
 function ScanPageContent() {
   const [result, setResult] = useState<ProductLookupResult | null>(null);
@@ -16,6 +26,8 @@ function ScanPageContent() {
   // Tras un ajuste: se resalta el número y se anuncia el cambio a los lectores de pantalla.
   const [justAdjusted, setJustAdjusted] = useState(false);
   const [announcement, setAnnouncement] = useState("");
+  const [notice, setNotice] = useState<Notice | null>(null);
+  const dismissNotice = useCallback(() => setNotice(null), []);
   // Cada búsqueda lleva un número: si otra empezó mientras tanto, sólo la última pinta.
   const latestLookup = useRef(0);
 
@@ -64,7 +76,30 @@ function ScanPageContent() {
     setResult({ found: true, product: outcome.product });
     setJustAdjusted(true);
     setAnnouncement(`${outcome.product.name}: stock actualizado a ${outcome.product.stock}`);
+    setNotice({
+      message: `${outcome.product.name}: ${outcome.product.stock - delta} → ${outcome.product.stock}`,
+      undo: { productId, delta },
+    });
     return true;
+  }
+
+  /** Deshacer = el ajuste inverso: queda registrado como un movimiento más (no se borra historial). */
+  async function handleUndo(undo: { productId: string; delta: number }) {
+    const outcome = await adjustStock({ productId: undo.productId, delta: -undo.delta });
+    if (!outcome.ok) {
+      // Casi siempre es porque otra persona movió el stock y el inverso dejaría negativo.
+      setNotice({
+        message:
+          outcome.error === "No hay stock suficiente"
+            ? "El stock cambió: no se puede deshacer"
+            : `No se pudo deshacer: ${outcome.error}`,
+      });
+      return;
+    }
+    setResult({ found: true, product: outcome.product });
+    setJustAdjusted(true);
+    setAnnouncement(`Se deshizo el ajuste: ${outcome.product.name} vuelve a ${outcome.product.stock}`);
+    setNotice(null);
   }
 
   return (
@@ -76,6 +111,16 @@ function ScanPageContent() {
 
       {loading && <p role="status">Buscando...</p>}
       {lookupError && <Alert>{lookupError}</Alert>}
+
+      {notice && (
+        <Toast
+          message={notice.message}
+          actionLabel={notice.undo ? "Deshacer" : undefined}
+          onAction={notice.undo ? () => void handleUndo(notice.undo!) : undefined}
+          onDismiss={dismissNotice}
+          durationMs={UNDO_TOAST_MS}
+        />
+      )}
 
       {result && (
         <ProductPanel

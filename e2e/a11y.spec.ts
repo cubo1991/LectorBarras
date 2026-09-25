@@ -50,6 +50,11 @@ for (const colorScheme of ["light", "dark"] as const) {
       await page.getByRole("button", { name: "-1", exact: true }).click();
       await expect(page.getByText("No hay stock suficiente")).toBeVisible();
       await expectNoViolations(page, "/scan (ficha con Sin stock y error)");
+
+      // Con el aviso de "Deshacer" a la vista (posición fija sobre la barra de navegación).
+      await page.getByRole("button", { name: "+1", exact: true }).click();
+      await expect(page.getByRole("button", { name: "Deshacer" })).toBeVisible();
+      await expectNoViolations(page, "/scan (con el aviso de deshacer)");
     });
   });
 }

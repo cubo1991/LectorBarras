@@ -111,3 +111,76 @@ test("cada ajuste se anuncia a los lectores de pantalla", async ({ page }) => {
   await expect(announcement).toContainText("Anuncio: stock actualizado a 7");
   await expect(announcement).toHaveAttribute("role", "status");
 });
+
+test.describe("deshacer", () => {
+  test("tras un ajuste aparece 'stock anterior → nuevo · Deshacer' y deshacer restaura el stock", async ({ page }) => {
+    await registerAndLogin(page);
+    await createProduct(page, { name: "Deshacer", stock: 2 });
+
+    await page.getByRole("button", { name: "+5", exact: true }).click();
+    await expect(page.getByText("Stock actual: 7")).toBeVisible();
+    await expect(page.getByText(/\[E2E\] Deshacer: 2 → 7/)).toBeVisible();
+
+    await page.getByRole("button", { name: "Deshacer" }).click();
+
+    await expect(page.getByText("Stock actual: 2")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Deshacer" })).toHaveCount(0);
+    await expect(page.getByTestId("stock-announcement")).toContainText("Se deshizo el ajuste");
+  });
+
+  test("el aviso desaparece solo a los ~6 s", async ({ page }) => {
+    await registerAndLogin(page);
+    await createProduct(page, { name: "Desaparece", stock: 1 });
+
+    await page.getByRole("button", { name: "+1", exact: true }).click();
+    await expect(page.getByRole("button", { name: "Deshacer" })).toBeVisible();
+
+    await expect(page.getByRole("button", { name: "Deshacer" })).toBeHidden({ timeout: 9_000 });
+  });
+
+  test("no desaparece mientras el foco está en 'Deshacer'", async ({ page }) => {
+    await registerAndLogin(page);
+    await createProduct(page, { name: "Con foco", stock: 1 });
+
+    await page.getByRole("button", { name: "+1", exact: true }).click();
+    const undo = page.getByRole("button", { name: "Deshacer" });
+    await undo.focus();
+
+    await page.waitForTimeout(7_500); // más que los 6 s
+    await expect(undo).toBeVisible();
+
+    // Al soltar el foco, vuelve a contar y se va.
+    await page.getByRole("heading", { level: 1 }).click();
+    await expect(undo).toBeHidden({ timeout: 9_000 });
+  });
+
+  test("si otra persona movió el stock y el inverso dejaría negativo, avisa y no lo aplica", async ({
+    page,
+    browser,
+  }) => {
+    await registerAndLogin(page);
+    const barcode = await createProduct(page, { name: "Otro usuario", stock: 3 });
+
+    await page.getByRole("button", { name: "+10", exact: true }).click();
+    await expect(page.getByText("Stock actual: 13")).toBeVisible();
+    const undo = page.getByRole("button", { name: "Deshacer" });
+    await undo.focus(); // el aviso queda mientras la otra persona trabaja
+
+    // Otra persona (otra sesión) resta 12 → el stock queda en 1.
+    const otherContext = await browser.newContext();
+    const other = await otherContext.newPage();
+    await registerAndLogin(other);
+    await other.goto(`/scan?code=${barcode}`);
+    await expect(other.getByText("Stock actual: 13")).toBeVisible();
+    await other.getByLabel("Otra cantidad").fill("12");
+    await other.getByRole("button", { name: "Restar" }).click();
+    await expect(other.getByText("Stock actual: 1")).toBeVisible();
+    await otherContext.close();
+
+    // Deshacer +10 dejaría 1 - 10 < 0: se informa y el stock no se toca.
+    await undo.click();
+    await expect(page.getByText("El stock cambió: no se puede deshacer")).toBeVisible();
+    await page.getByRole("button", { name: "+1", exact: true }).click(); // fuerza refrescar el número visible
+    await expect(page.getByText("Stock actual: 2")).toBeVisible();
+  });
+});
