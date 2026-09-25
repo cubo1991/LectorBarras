@@ -25,10 +25,10 @@ test("un UPC-A de 12 dígitos y su EAN-13 equivalente son el mismo producto", as
 
   // Se da de alta con 12 dígitos y queda guardado en su forma canónica (GTIN-13).
   await lookup(page, upcA);
-  await expect(page.getByText(`No existe un producto con el código ${ean13}`)).toBeVisible();
+  await expect(page.getByText(`El código ${ean13} todavía no está cargado`)).toBeVisible();
   await page.getByPlaceholder("Nombre del producto").fill(`${E2E_PRODUCT_PREFIX} upc`);
   await page.getByPlaceholder("Stock inicial").fill("2");
-  await page.getByRole("button", { name: "Dar de alta" }).click();
+  await page.getByRole("button", { name: "Cargar producto" }).click();
   // "Código: …" también lo muestra el formulario de alta: esperar la ficha (que trae el
   // stock) evita navegar mientras el alta todavía está en vuelo.
   await expect(page.getByText("Stock actual: 2")).toBeVisible();
@@ -47,4 +47,26 @@ test("el ingreso manual rechaza un código demasiado corto", async ({ page }) =>
   await lookup(page, "abc");
 
   await expect(page.getByText(/entre 4 y 64|4 a 64/)).toBeVisible();
+});
+
+test("el ingreso manual abre teclado numérico y 'ABC' pasa a texto sin perder lo escrito", async ({ page }) => {
+  await registerAndLogin(page);
+  await page.goto("/scan");
+  const field = page.getByPlaceholder("Ingresar código manualmente");
+  const abc = page.getByRole("button", { name: "Teclado de letras" });
+
+  await expect(field).toHaveAttribute("inputmode", "numeric"); // por defecto: números (EAN/UPC)
+  await expect(abc).toHaveAttribute("aria-pressed", "false");
+
+  await field.fill("779");
+  await abc.click();
+  await expect(field).toHaveAttribute("inputmode", "text");
+  await expect(abc).toHaveAttribute("aria-pressed", "true");
+  await expect(field).toHaveValue("779"); // conserva lo escrito
+  await expect(field).toBeFocused(); // el foco vuelve al campo (así el celular cambia de teclado)
+
+  await field.fill("ABC-1234"); // un alfanumérico sigue siendo posible
+  await abc.click();
+  await expect(field).toHaveAttribute("inputmode", "numeric");
+  expect((await abc.boundingBox())!.width).toBeGreaterThanOrEqual(44);
 });

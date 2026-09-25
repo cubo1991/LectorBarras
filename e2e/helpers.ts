@@ -63,11 +63,11 @@ export async function createProduct(
   await page.getByPlaceholder("Ingresar código manualmente").fill(barcode);
   await page.getByRole("button", { name: "Buscar" }).click();
 
-  await expect(page.getByText(`No existe un producto con el código ${barcode}`)).toBeVisible();
+  await expect(page.getByText(`El código ${barcode} todavía no está cargado`)).toBeVisible();
 
   await page.getByPlaceholder("Nombre del producto").fill(`${E2E_PRODUCT_PREFIX} ${name}`);
   await page.getByPlaceholder("Stock inicial").fill(String(stock));
-  await page.getByRole("button", { name: "Dar de alta" }).click();
+  await page.getByRole("button", { name: "Cargar producto" }).click();
 
   await expect(page.getByText(`Stock actual: ${stock}`)).toBeVisible();
   return barcode;

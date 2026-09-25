@@ -108,8 +108,8 @@ test("en modo Suma, un producto desconocido no suma nada y ofrece cargarlo", asy
   await page.goto("/scan");
   await turnOnSumMode(page);
 
-  await expect(page.getByText(`No existe un producto con el código ${qr}`)).toBeVisible({ timeout: READ_TIMEOUT });
-  await expect(page.getByRole("button", { name: "Dar de alta" })).toBeVisible();
+  await expect(page.getByText(`El código ${qr} todavía no está cargado`)).toBeVisible({ timeout: READ_TIMEOUT });
+  await expect(page.getByRole("button", { name: "Cargar producto" })).toBeVisible();
   await expect(page.getByRole("button", { name: /Deshacer/ })).toHaveCount(0);
 });
 

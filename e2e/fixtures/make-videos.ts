@@ -125,7 +125,7 @@ export function generateFixtures(): FixtureCodes {
     inside: randomEan13(),
     outside: randomEan13(),
     // Código propio de los e2e de recepción: esos tests CREAN el producto, así que no puede
-    // compartirse con los que esperan "No existe un producto…" (scanner.spec).
+    // compartirse con los que esperan "El código … todavía no está cargado" (scanner.spec).
     reception: randomEan13(),
     qr: `QR-${Math.floor(Math.random() * 1e6).toString().padStart(6, "0")}`,
     // EAN-13 bien formado pero con el dígito verificador adulterado: nunca debe leerse.

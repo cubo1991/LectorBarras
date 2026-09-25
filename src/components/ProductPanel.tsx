@@ -36,7 +36,7 @@ export function ProductPanel({ result, loading, adjustError, justAdjusted, annou
   if (!result.found) {
     return (
       <div className={`flex flex-col gap-3 ${dim}`}>
-        <p>No existe un producto con el código {result.barcode}.</p>
+        <p>El código {result.barcode} todavía no está cargado.</p>
         <NewProductForm barcode={result.barcode} onCreated={onCreated} />
       </div>
     );

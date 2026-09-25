@@ -79,6 +79,10 @@ export function BarcodeScanner({ onDetected, onManualEntry }: Props) {
   const [torchOn, setTorchOn] = useState(false);
   const [zoomValue, setZoomValue] = useState<number | null>(null);
   const [manualCode, setManualCode] = useState("");
+  // Casi todos los códigos son numéricos (EAN/UPC): el teclado numérico es el de partida.
+  // "ABC" pasa a teclado de texto para Code 128/39 y otros alfanuméricos.
+  const [letters, setLetters] = useState(false);
+  const manualInputRef = useRef<HTMLInputElement>(null);
   const [manualError, setManualError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -273,8 +277,10 @@ export function BarcodeScanner({ onDetected, onManualEntry }: Props) {
         <div className="min-w-0 flex-1">
           <Field
             label="Código de barras"
+            ref={manualInputRef}
             type="text"
             name="manual-code"
+            inputMode={letters ? "text" : "numeric"}
             autoCapitalize="off"
             autoComplete="off"
             spellCheck={false}
@@ -284,6 +290,18 @@ export function BarcodeScanner({ onDetected, onManualEntry }: Props) {
             error={manualError ?? undefined}
           />
         </div>
+        <Button
+          variant="secondary"
+          aria-pressed={letters}
+          aria-label="Teclado de letras"
+          onClick={() => {
+            setLetters((on) => !on);
+            manualInputRef.current?.focus(); // para que el celular cambie de teclado ya
+          }}
+          className={`mt-6 min-w-11 px-2 ${letters ? "border-accent" : ""}`}
+        >
+          ABC
+        </Button>
         <Button type="submit" className="mt-6">
           Buscar
         </Button>

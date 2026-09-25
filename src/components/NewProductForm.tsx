@@ -49,7 +49,7 @@ export function NewProductForm({ barcode, onCreated }: Props) {
           required
         />
         {error && <Alert>{error}</Alert>}
-        <Button type="submit">Dar de alta</Button>
+        <Button type="submit">Cargar producto</Button>
       </form>
     </Card>
   );

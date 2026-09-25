@@ -269,18 +269,20 @@ Spec: `SPEC-flow.md` · Plan y decisiones: `tasks/plan-flow.md`
 
 ---
 
-### Task 10: Copy nuevo y teclado numérico con "ABC"
+### Task 10: Copy nuevo y teclado numérico con "ABC" ✅
+
+> Hecho; 119 unit y 65 e2e en verde. Textos nuevos aplicados en la app y en los ~20 lugares de los e2e a la vez ('El código X todavía no está cargado', 'Cargar producto'). Teclado del ingreso manual: numérico por defecto, botón 'ABC' (`aria-pressed`, etiqueta 'Teclado de letras') que pasa a texto, conserva lo escrito y **devuelve el foco al campo** (en el celular el teclado sólo cambia si el campo se vuelve a enfocar). Los alfanuméricos siguen soportados.
 
 **Description:** Textos nuevos (tabla de copy de la spec: "El código X todavía no está cargado", "Cargar producto") y el ingreso manual abre teclado numérico por defecto con un botón "ABC" que pasa a texto (los alfanuméricos siguen soportados).
 
 **Acceptance criteria:**
-- [ ] Los textos de la tabla de copy están aplicados y los e2e que los usaban, actualizados
-- [ ] El campo manual usa `inputMode="numeric"` por defecto; "ABC" lo pasa a texto y viceversa, y conserva lo escrito
-- [ ] Un código alfanumérico se puede seguir ingresando (pasando a "ABC")
+- [x] Los textos de la tabla de copy están aplicados y los e2e que los usaban, actualizados
+- [x] El campo manual usa `inputMode="numeric"` por defecto; "ABC" lo pasa a texto y viceversa, y conserva lo escrito
+- [x] Un código alfanumérico se puede seguir ingresando (pasando a "ABC")
 
 **Verification:**
-- [ ] Tests pass: `npm test`
-- [ ] E2E: `npm run test:e2e` completo
+- [x] Tests pass: `npm test`
+- [x] E2E: `npm run test:e2e` completo
 
 **Dependencies:** Task 8 (comparten `BarcodeScanner.tsx`)
 

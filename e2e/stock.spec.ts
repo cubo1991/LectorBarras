@@ -50,7 +50,7 @@ test("un código ya existente no se puede dar de alta dos veces", async ({ page 
   await page.getByRole("button", { name: "Buscar" }).click();
 
   await expect(page.getByText("Stock actual: 3")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Dar de alta" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Cargar producto" })).toHaveCount(0);
 });
 
 test("+5 y +10 suman esas cantidades", async ({ page }) => {
