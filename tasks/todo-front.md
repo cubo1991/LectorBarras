@@ -64,18 +64,20 @@ Spec: `SPEC-front.md` · Plan y decisiones: `tasks/plan-front.md`
 
 ## Phase 2: Shell y home
 
-### Task 3: Shell de navegación (grupo `(app)`)
+### Task 3: Shell de navegación (grupo `(app)`) ✅
+
+> Hecho; 15 e2e en verde. En el celular la navegación es una barra inferior fija (al alcance del pulgar); desde `sm` pasa al encabezado. Se quitó el `LogoutButton` y los links sueltos de `/scan` y `/products` (el shell los reemplaza). Pendiente sólo el check manual en el celular, en el checkpoint.
 
 **Description:** Mover `scan` y `products` a un grupo de rutas `(app)` con un layout que muestra un encabezado fijo con navegación (Inicio / Escanear / Productos) y el botón de salir. Se quita el `LogoutButton` suelto de cada página. Las URLs no cambian. La navegación **no usa `<ul>/<li>`** (los e2e cuentan `listitem`).
 
 **Acceptance criteria:**
-- [ ] `/scan` y `/products` viven en `src/app/(app)/` y responden en las mismas URLs
-- [ ] El encabezado marca la sección activa (`aria-current="page"`) y cada destino se alcanza con un toque, con objetivos ≥ 44 px, sin scroll horizontal a 360 px
-- [ ] `/login` y `/register` no muestran el shell; sin sesión, `/` sigue redirigiendo a `/login`
+- [x] `/scan` y `/products` viven en `src/app/(app)/` y responden en las mismas URLs
+- [x] El encabezado marca la sección activa (`aria-current="page"`) y cada destino se alcanza con un toque, con objetivos ≥ 44 px, sin scroll horizontal a 360 px
+- [x] `/login` y `/register` no muestran el shell; sin sesión, `/` sigue redirigiendo a `/login`
 
 **Verification:**
-- [ ] E2E: `npm run test:e2e` completo (sobre todo `products.spec.ts` y `login.spec.ts`)
-- [ ] Build succeeds: `npm run build`
+- [x] E2E: `npm run test:e2e` completo (sobre todo `products.spec.ts` y `login.spec.ts`)
+- [x] Build succeeds: `npm run build`
 - [ ] Manual check: navegar Inicio → Escanear → Productos → Salir en el celular
 
 **Dependencies:** Task 2
@@ -90,18 +92,20 @@ Spec: `SPEC-front.md` · Plan y decisiones: `tasks/plan-front.md`
 
 ---
 
-### Task 4: Home real en `/`
+### Task 4: Home real en `/` ✅
+
+> Hecho; 16 e2e en verde (el smoke ahora prueba sin sesión → `/login` y con sesión → home con email y navegación). Se borraron los 5 SVG del template. `Card.tsx` **no se creó**: la home no lo necesita; se crea en la Task 5/6 cuando haya dos usos reales. Nota: una corrida de `next build` falló por tipos generados viejos en `.next/dev/types` (cache local ignorada por git, no afecta a Vercel); se borró esa carpeta.
 
 **Description:** Reemplazar el template de create-next-app por la home: saludo con el email de la sesión y dos acciones grandes (Escanear / Buscar productos). Sin consultas nuevas a la base. Eliminar los assets del template que queden sin uso.
 
 **Acceptance criteria:**
-- [ ] `/` no contiene rastro del template (logo de Next, textos, links de Vercel); muestra saludo y dos acciones ≥ 44 px que llevan a `/scan` y `/products`
-- [ ] Estado con sesión = home con shell; sin sesión = redirige a `/login` (comportamiento actual)
-- [ ] `e2e/smoke.spec.ts` verifica la home nueva
+- [x] `/` no contiene rastro del template (logo de Next, textos, links de Vercel); muestra saludo y dos acciones ≥ 44 px que llevan a `/scan` y `/products`
+- [x] Estado con sesión = home con shell; sin sesión = redirige a `/login` (comportamiento actual)
+- [x] `e2e/smoke.spec.ts` verifica la home nueva
 
 **Verification:**
-- [ ] E2E: `npm run test:e2e -- e2e/smoke.spec.ts e2e/login.spec.ts`
-- [ ] Build succeeds: `npm run build`
+- [x] E2E: `npm run test:e2e -- e2e/smoke.spec.ts e2e/login.spec.ts`
+- [x] Build succeeds: `npm run build`
 - [ ] Manual check: primera pantalla tras el login, en celular, claro y oscuro
 
 **Dependencies:** Task 3
