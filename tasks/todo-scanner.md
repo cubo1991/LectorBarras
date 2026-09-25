@@ -6,19 +6,21 @@ Spec: `SPEC-scanner.md` · Plan y decisiones: `tasks/plan-scanner.md`
 
 ## Phase 1: Lógica y backend universales
 
-### Task 1: `barcode.ts` — validación, normalización y candidatos de búsqueda
+### Task 1: `barcode.ts` — validación, normalización y candidatos de búsqueda ✅
+
+> Hecho; 19 tests con vectores reales de cada formato (EAN-13, EAN-8, UPC-A, UPC-E en sus 4 casos de expansión, ITF-14) y todos los caminos de normalización y candidatos.
 
 **Description:** Módulo puro, fuente de verdad única. Valida el dígito verificador GS1 (EAN-13, EAN-8, UPC-A, UPC-E, ITF-14), normaliza a GTIN-13 (UPC-A → `0`+12; UPC-E → expandir a UPC-A → `0`+12; EAN-13, EAN-8, ITF-14 y alfanuméricos sin tocar), genera los candidatos de búsqueda (canónico + variante de 12 dígitos) y define la validación relajada del ingreso manual (4–64 ASCII imprimibles, sin espacios en los extremos).
 
 **Acceptance criteria:**
-- [ ] `isValidGs1(code, format)` acepta códigos válidos y rechaza checksum inválido para EAN-13/EAN-8/UPC-A/UPC-E/ITF-14
-- [ ] `normalizeBarcode(code, format?)` convierte UPC-A y UPC-E a GTIN-13 y deja el resto igual; recorta espacios
-- [ ] `barcodeCandidates(code)` devuelve el canónico y, si es GTIN-13 que empieza con `0`, también la variante de 12 dígitos (y viceversa), sin duplicados
-- [ ] `isValidBarcodeInput(code)` acepta Code 128/39 y numéricos internos; rechaza vacío, < 4, > 64, espacios en los extremos y caracteres no imprimibles
+- [x] `isValidGs1(code, format)` acepta códigos válidos y rechaza checksum inválido para EAN-13/EAN-8/UPC-A/UPC-E/ITF-14
+- [x] `normalizeBarcode(code, format?)` convierte UPC-A y UPC-E a GTIN-13 y deja el resto igual; recorta espacios
+- [x] `barcodeCandidates(code)` devuelve el canónico y, si es GTIN-13 que empieza con `0`, también la variante de 12 dígitos (y viceversa), sin duplicados
+- [x] `isValidBarcodeInput(code)` acepta Code 128/39 y numéricos internos; rechaza vacío, < 4, > 64, espacios en los extremos y caracteres no imprimibles
 
 **Verification:**
-- [ ] Tests pass: `npm test -- src/lib/barcode.test.ts` (vectores reales de cada formato, válidos e inválidos)
-- [ ] Build succeeds: `npm run build`
+- [x] Tests pass: `npm test -- src/lib/barcode.test.ts` (vectores reales de cada formato, válidos e inválidos)
+- [x] Build succeeds: `npm run build`
 
 **Dependencies:** None
 
