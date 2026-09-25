@@ -189,6 +189,8 @@ Spec: `SPEC-front.md` · Plan y decisiones: `tasks/plan-front.md`
 
 ### Task 7: Feedback al escanear (vibración, sonido, silenciar) ✅
 
+> **Actualizado:** la vibración se quitó después (pedido del usuario, ver `SPEC-scanner.md`); queda sólo el sonido al confirmar.
+
 > Hecho; 42 unit y 16 e2e en verde. El feedback suena como máximo una vez cada 2 s por detección (zxing repite el mismo código en cada frame). El botón "Sonido: activado/silenciado" sólo aparece si la cámara arrancó, así que no hay e2e del toggle (headless no tiene cámara): se prueba a mano en el celular. La vibración no existe en iOS Safari (documentado en el spec).
 
 **Description:** Módulo `feedback.ts` que, al detectar un código, dispara `navigator.vibrate` y un beep corto por Web Audio, ambos como mejora progresiva (si la API no existe, no pasa nada). Un control visible en el visor permite silenciar, y la preferencia persiste. El `AudioContext` se desbloquea con el primer toque del usuario en `/scan`.

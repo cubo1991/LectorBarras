@@ -1,3 +1,4 @@
+import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "./fixtures/camera";
 import { readCodes } from "./fixtures/make-videos";
 import { gs1CheckDigit } from "../src/lib/barcode";
@@ -181,3 +182,62 @@ test("con linterna y zoom declarados (Android) aparecen y aplican las constraint
   await page.getByRole("slider", { name: "Zoom" }).fill("2.5");
   await expect.poll(applied).toContainEqual({ advanced: [{ zoom: 2.5 }] });
 });
+
+test("la guía muestra la pista mientras busca y confirma sin vibrar", async ({ cameraPage }) => {
+  const page = await cameraPage("inside");
+  const { inside } = readCodes();
+
+  // Se cuentan las vibraciones y se demora la búsqueda del producto, así el estado
+  // "confirmado" del marco queda visible el tiempo suficiente para verlo.
+  await page.addInitScript(() => {
+    const w = window as unknown as { __vibrations: number };
+    w.__vibrations = 0;
+    navigator.vibrate = () => {
+      w.__vibrations++;
+      return true;
+    };
+  });
+  await page.route("**/scan", async (route) => {
+    if (route.request().method() === "POST") await new Promise((resolve) => setTimeout(resolve, 3_000));
+    await route.continue();
+  });
+  await registerAndLogin(page);
+
+  await page.goto("/scan");
+
+  await expect(page.getByText("Poné el código dentro del marco").or(page.getByText("Leyendo…"))).toBeVisible({
+    timeout: READ_TIMEOUT,
+  });
+  await expect(page.getByText("✓ Código confirmado")).toBeVisible({ timeout: READ_TIMEOUT });
+
+  await expect(page.getByText(`No existe un producto con el código ${inside}`)).toBeVisible({
+    timeout: READ_TIMEOUT,
+  });
+  expect(await page.evaluate(() => (window as unknown as { __vibrations: number }).__vibrations)).toBe(0);
+});
+
+for (const colorScheme of ["light", "dark"] as const) {
+  test(`el visor con la cámara activa cumple WCAG AA en ${colorScheme} y no desborda a 360 px`, async ({
+    cameraPage,
+  }) => {
+    const page = await cameraPage("outside");
+    await page.setViewportSize({ width: 360, height: 740 });
+    await page.emulateMedia({ colorScheme });
+    await page.addInitScript(() => {
+      // Con linterna y zoom visibles: es la pantalla con más controles.
+      const proto = MediaStreamTrack.prototype as unknown as Record<string, unknown>;
+      proto.getCapabilities = () => ({ torch: true, zoom: { min: 1, max: 4, step: 0.5 } });
+    });
+    await registerAndLogin(page);
+
+    await page.goto("/scan");
+    await expect(page.getByText("Iniciando cámara…")).toBeHidden({ timeout: READ_TIMEOUT });
+    await expect(page.getByRole("button", { name: /Linterna/ })).toBeVisible();
+
+    const { violations } = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
+    expect(violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`)).toEqual([]);
+
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+    expect(overflow).toBeLessThanOrEqual(0);
+  });
+}

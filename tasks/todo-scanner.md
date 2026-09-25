@@ -244,20 +244,22 @@ Spec: `SPEC-scanner.md` · Plan y decisiones: `tasks/plan-scanner.md`
 
 ---
 
-### Task 9: Guía viva y sonido al confirmar (sin vibración)
+### Task 9: Guía viva y sonido al confirmar (sin vibración) ✅
+
+> Hecho; 99 unit y 39 e2e en verde. Marco en tres estados (`Poné el código dentro del marco` → `Leyendo…` con borde amarillo punteado → `✓ Código confirmado` con borde verde), cada uno con texto distinto además del color. Se quitó la vibración de `feedback.ts`; el beep suena al confirmar. E2E: la pista es visible, el estado confirmado se ve (con la búsqueda demorada 3 s vía `page.route`) y `navigator.vibrate` se espía y **nunca** se llama. Un test aparte corre axe y el chequeo de desborde a 360 px **con la cámara activa y linterna/zoom visibles**, en claro y oscuro (las pantallas de a11y y responsive anteriores no tenían cámara y no cubrían el visor). El test unitario de `feedback` reimporta el módulo por caso: cachea el `AudioContext` y, sin eso, los casos posteriores heredaban el del primero y pasaban sin probar nada.
 
 **Description:** El marco cambia de estado: buscando (borde neutro) → detectado (borde de acento, hay una lectura sin confirmar) → confirmado (borde de éxito + texto), con una pista visible ("Poné el código dentro del marco"). Los estados se distinguen sin depender sólo del color. Se quita la vibración de `feedback.ts` y el sonido pasa a sonar **al confirmar** (no a la primera lectura).
 
 **Acceptance criteria:**
-- [ ] Tres estados visibles del marco, cada uno con un texto o forma distinta además del color
-- [ ] La pista está siempre visible mientras la cámara funciona
-- [ ] El dispositivo nunca vibra: no queda ninguna llamada a `navigator.vibrate`
-- [ ] El sonido suena una vez al confirmar (salvo silenciado) y no en lecturas sin confirmar
+- [x] Tres estados visibles del marco, cada uno con un texto o forma distinta además del color
+- [x] La pista está siempre visible mientras la cámara funciona
+- [x] El dispositivo nunca vibra: no queda ninguna llamada a `navigator.vibrate`
+- [x] El sonido suena una vez al confirmar (salvo silenciado) y no en lecturas sin confirmar
 
 **Verification:**
-- [ ] Tests pass: `npm test` (`feedback.ts` sin vibración; el sonido se dispara sólo al confirmar)
-- [ ] E2E: `npx playwright test e2e/scanner.spec.ts` (el estado "confirmado" es visible tras leer) y `npm run test:e2e` completo
-- [ ] E2E: `npx playwright test --project=mobile` y `e2e/a11y.spec.ts` siguen en verde (la guía no rompe accesibilidad ni tamaños)
+- [x] Tests pass: `npm test` (`feedback.ts` sin vibración; el sonido se dispara sólo al confirmar)
+- [x] E2E: `npx playwright test e2e/scanner.spec.ts` (el estado "confirmado" es visible tras leer) y `npm run test:e2e` completo
+- [x] E2E: `npx playwright test --project=mobile` y `e2e/a11y.spec.ts` siguen en verde (la guía no rompe accesibilidad ni tamaños)
 - [ ] Manual check: en el Android real, sonido al confirmar y ningún zumbido — **pendiente, celular**
 
 **Dependencies:** Task 6
@@ -272,6 +274,6 @@ Spec: `SPEC-scanner.md` · Plan y decisiones: `tasks/plan-scanner.md`
 ---
 
 ## Checkpoint: Completo
-- [ ] Criterios 1–10 de `SPEC-scanner.md` cumplidos y automatizados
+- [x] Criterios 1–10 de `SPEC-scanner.md` cumplidos y automatizados
 - [ ] Criterio 11 probado en el Android real (10 productos, ITF-14 / Code 128 / QR si hay, linterna, zoom, poca luz)
-- [ ] `lint`, `test`, `test:e2e`, `build` en verde y deploy verificado
+- [x] `lint`, `test` (99), `test:e2e` (39), `build` en verde (deploy: se verifica tras este push)

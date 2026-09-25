@@ -27,6 +27,23 @@ import {
   isCameraAvailable,
 } from "@/lib/scanner";
 
+// Colores fijos (no tokens): el marco se dibuja sobre el video, no sobre el fondo del tema.
+const FRAME_STYLE = {
+  searching: "border-2 border-white/80",
+  reading: "border-4 border-dashed border-yellow-300",
+  confirmed: "border-4 border-green-400",
+} as const;
+
+const PHASE_TEXT = {
+  searching: "Poné el código dentro del marco",
+  reading: "Leyendo…",
+  confirmed: "✓ Código confirmado",
+} as const;
+
+/** Cuánto se mantiene "Leyendo…" sin nuevas lecturas válidas (unas ~6 vueltas del bucle). */
+const READING_HOLD_MS = 600;
+const CONFIRMED_HOLD_MS = 1500;
+
 type Props = {
   onDetected: (code: string) => void;
 };
@@ -41,6 +58,9 @@ export function BarcodeScanner({ onDetected }: Props) {
   // El video puede tardar en arrancar (permiso, cámara lenta): sin este estado el
   // visor queda negro y mudo, indistinguible de una falla.
   const [ready, setReady] = useState(false);
+  // Estado del marco: buscando → leyendo (hay una lectura válida sin confirmar) → confirmado.
+  const [phase, setPhase] = useState<"searching" | "reading" | "confirmed">("searching");
+  const phaseTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const muted = useMuted();
   // Linterna y zoom sólo existen en algunos dispositivos (Android Chrome): se descubren
   // con getCapabilities() y, si faltan, no se muestra nada.
@@ -57,6 +77,13 @@ export function BarcodeScanner({ onDetected }: Props) {
     let stream: MediaStream | undefined;
     let stopLoop: (() => void) | undefined;
     let cancelled = false;
+
+    // Muestra un estado del marco y lo devuelve a "buscando" si no llega otra lectura.
+    const showPhase = (next: "reading" | "confirmed", holdMs: number) => {
+      setPhase(next);
+      clearTimeout(phaseTimer.current);
+      phaseTimer.current = setTimeout(() => setPhase("searching"), holdMs);
+    };
 
     const start = async () => {
       // Se lanza en vez de setear estado acá: así el caso de HTTP sin
@@ -90,10 +117,12 @@ export function BarcodeScanner({ onDetected }: Props) {
           // Descarta lo que no pasa el filtro (formato, dígito verificador, largo)...
           const code = acceptReading(reading.text, reading.format);
           if (!code) return;
+          showPhase("reading", READING_HOLD_MS);
           // ...y sólo acepta un código tras varias lecturas iguales seguidas.
           const confirmed = confirmer.push(code, Date.now());
           if (!confirmed) return;
           confirmer.reset();
+          showPhase("confirmed", CONFIRMED_HOLD_MS);
           scanFeedback();
           onDetected(confirmed);
         },
@@ -112,6 +141,7 @@ export function BarcodeScanner({ onDetected }: Props) {
       stopLoop?.();
       stream?.getTracks().forEach((track) => track.stop());
       trackRef.current = null;
+      clearTimeout(phaseTimer.current);
       video.srcObject = null;
     };
   }, [onDetected]);
@@ -152,10 +182,11 @@ export function BarcodeScanner({ onDetected }: Props) {
             playsInline
             onPlaying={() => setReady(true)}
           />
-          {/* Marco de encuadre: orienta dónde poner el código. Decorativo. */}
+          {/* Marco de encuadre: orienta dónde poner el código. Decorativo; el estado se
+              dice también con texto (abajo), no sólo con el color del borde. */}
           <div
             aria-hidden
-            className="pointer-events-none absolute rounded-control border-2 border-white/80"
+            className={`pointer-events-none absolute rounded-control ${FRAME_STYLE[phase]}`}
             style={{
               // Es exactamente la zona que se decodifica (GUIDE): lo de afuera se ignora.
               left: `${((1 - GUIDE.widthFraction) / 2) * 100}%`,
@@ -164,9 +195,16 @@ export function BarcodeScanner({ onDetected }: Props) {
               bottom: `${((1 - GUIDE.heightFraction) / 2) * 100}%`,
             }}
           />
-          {!ready && (
+          {!ready ? (
             <p role="status" className="absolute inset-0 flex items-center justify-center text-sm text-white">
               Iniciando cámara…
+            </p>
+          ) : (
+            <p
+              role="status"
+              className="absolute inset-x-0 bottom-2 mx-auto w-fit rounded-full bg-black/70 px-3 py-1 text-sm text-white"
+            >
+              {PHASE_TEXT[phase]}
             </p>
           )}
         </div>

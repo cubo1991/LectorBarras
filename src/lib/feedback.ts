@@ -1,9 +1,9 @@
 import { useSyncExternalStore } from "react";
 
 /**
- * Feedback al detectar un código: vibración + beep corto. Ambos son mejoras
- * progresivas: iOS Safari no tiene `navigator.vibrate` y el audio necesita un
- * gesto previo del usuario para desbloquearse. Si algo falta, no pasa nada.
+ * Aviso de "código aceptado": un beep corto, y nada más. Se descartó la vibración a
+ * pedido del usuario. El audio necesita un gesto previo para desbloquearse (ver
+ * `unlockAudio`); si algo falta, no pasa nada y el escaneo sigue igual.
  */
 const STORAGE_KEY = "lectorbarras:muted";
 
@@ -67,7 +67,6 @@ function beep(): void {
 export function scanFeedback(): void {
   if (isMuted()) return;
   try {
-    navigator.vibrate?.(60);
     beep();
   } catch {
     // el feedback nunca debe romper el escaneo
