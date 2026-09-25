@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
+import { scanFeedback, setMuted, unlockAudio, useMuted } from "@/lib/feedback";
 import {
   CAMERA_CONSTRAINTS,
   cameraErrorMessage,
@@ -28,6 +29,9 @@ export function BarcodeScanner({ onDetected }: Props) {
   // El video puede tardar en arrancar (permiso, cámara lenta): sin este estado el
   // visor queda negro y mudo, indistinguible de una falla.
   const [ready, setReady] = useState(false);
+  const muted = useMuted();
+  // zxing entrega el mismo código en cada frame: el feedback suena una vez por detección.
+  const lastFeedbackAt = useRef(0);
   const [manualCode, setManualCode] = useState("");
   const [manualError, setManualError] = useState<string | null>(null);
 
@@ -47,6 +51,10 @@ export function BarcodeScanner({ onDetected }: Props) {
         (result, error) => {
           if (result) {
             setReadWarning(null);
+            if (Date.now() - lastFeedbackAt.current > 2000) {
+              lastFeedbackAt.current = Date.now();
+              scanFeedback();
+            }
             onDetected(result.getText());
             return;
           }
@@ -88,7 +96,8 @@ export function BarcodeScanner({ onDetected }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    // El primer toque en el escáner desbloquea el audio (los navegadores no dejan sonar antes).
+    <div className="flex flex-col gap-4" onPointerDown={unlockAudio}>
       {!fatalError && (
         <div className="relative aspect-video overflow-hidden rounded-control bg-black">
           <video
@@ -109,6 +118,15 @@ export function BarcodeScanner({ onDetected }: Props) {
             </p>
           )}
         </div>
+      )}
+      {!fatalError && (
+        <Button
+          variant="secondary"
+          onClick={() => setMuted(!muted)}
+          className="self-end text-sm"
+        >
+          {muted ? "Sonido: silenciado" : "Sonido: activado"}
+        </Button>
       )}
       {fatalError && <Alert>{fatalError}</Alert>}
       {!fatalError && readWarning && <Alert tone="warning">{readWarning}</Alert>}

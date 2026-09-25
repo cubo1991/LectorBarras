@@ -187,18 +187,20 @@ Spec: `SPEC-front.md` · Plan y decisiones: `tasks/plan-front.md`
 
 ## Phase 4: Extras
 
-### Task 7: Feedback al escanear (vibración, sonido, silenciar)
+### Task 7: Feedback al escanear (vibración, sonido, silenciar) ✅
+
+> Hecho; 42 unit y 16 e2e en verde. El feedback suena como máximo una vez cada 2 s por detección (zxing repite el mismo código en cada frame). El botón "Sonido: activado/silenciado" sólo aparece si la cámara arrancó, así que no hay e2e del toggle (headless no tiene cámara): se prueba a mano en el celular. La vibración no existe en iOS Safari (documentado en el spec).
 
 **Description:** Módulo `feedback.ts` que, al detectar un código, dispara `navigator.vibrate` y un beep corto por Web Audio, ambos como mejora progresiva (si la API no existe, no pasa nada). Un control visible en el visor permite silenciar, y la preferencia persiste. El `AudioContext` se desbloquea con el primer toque del usuario en `/scan`.
 
 **Acceptance criteria:**
-- [ ] Al detectar un código vibra y suena (salvo silenciado); sin `navigator.vibrate` o sin `AudioContext` el escaneo funciona igual
-- [ ] El control de silencio es un botón con nombre accesible y estado (`aria-pressed`); la preferencia persiste entre visitas (con `try/catch` por si el storage falla)
-- [ ] El feedback se dispara una sola vez por detección (no por frame)
+- [x] Al detectar un código vibra y suena (salvo silenciado); sin `navigator.vibrate` o sin `AudioContext` el escaneo funciona igual
+- [x] El control de silencio es un botón con nombre accesible y estado (`aria-pressed`); la preferencia persiste entre visitas (con `try/catch` por si el storage falla)
+- [x] El feedback se dispara una sola vez por detección (no por frame)
 
 **Verification:**
-- [ ] Tests pass: `npm test` (Vitest: respeta silencio, tolera APIs ausentes, persistencia con storage roto)
-- [ ] E2E: `npm run test:e2e -- e2e/stock.spec.ts`
+- [x] Tests pass: `npm test` (Vitest: respeta silencio, tolera APIs ausentes, persistencia con storage roto)
+- [x] E2E: `npm run test:e2e -- e2e/stock.spec.ts`
 - [ ] Manual check: en el celular, escanear con sonido, silenciar, recargar y confirmar que sigue silenciado
 
 **Dependencies:** Task 5
