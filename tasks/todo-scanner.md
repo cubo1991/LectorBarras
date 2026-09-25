@@ -187,18 +187,20 @@ Spec: `SPEC-scanner.md` · Plan y decisiones: `tasks/plan-scanner.md`
 
 ---
 
-### Task 7: Detector nativo (`BarcodeDetector`) con respaldo zxing
+### Task 7: Detector nativo (`BarcodeDetector`) con respaldo zxing ✅
+
+> Hecho; 85 unit y 34 e2e en verde. `createDecoder()` usa `BarcodeDetector` si existe y soporta alguno de los 8 formatos, con zxing de respaldo permanente si el nativo falla en ejecución. Con varios códigos en el marco el nativo elige el más grande. Además de los unit con un detector simulado, hay un **e2e con `BarcodeDetector` simulado** (`addInitScript`) que prueba el cableado real: el motor nativo se usa (se cuentan las llamadas), pasan las 3 lecturas y un UPC-A de 12 dígitos llega como GTIN-13. **Sigue pendiente a mano en el Android real**: que la precisión del motor nativo sea la esperada con productos reales.
 
 **Description:** Interfaz de motor `canvas → {text, format} | null` con dos implementaciones. Si `BarcodeDetector` existe y soporta los formatos, se usa; si no, zxing. El resultado pasa por el mismo filtro y normalización (Task 6).
 
 **Acceptance criteria:**
-- [ ] Con `BarcodeDetector` disponible se usa y sus formatos se traducen a los mismos nombres que zxing
-- [ ] Sin `BarcodeDetector` (o si falla al crearse) se usa zxing sin mostrar error
-- [ ] El código de UPC-A que devuelva el motor nativo pasa por `normalize()` y da el mismo producto que zxing
+- [x] Con `BarcodeDetector` disponible se usa y sus formatos se traducen a los mismos nombres que zxing
+- [x] Sin `BarcodeDetector` (o si falla al crearse) se usa zxing sin mostrar error
+- [x] El código de UPC-A que devuelva el motor nativo pasa por `normalize()` y da el mismo producto que zxing
 
 **Verification:**
-- [ ] Tests pass: `npm test` (selección de motor y traducción de formatos con un `BarcodeDetector` simulado)
-- [ ] E2E: `npm run test:e2e` completo (usa zxing; sin regresiones)
+- [x] Tests pass: `npm test` (selección de motor y traducción de formatos con un `BarcodeDetector` simulado)
+- [x] E2E: `npm run test:e2e` completo (usa zxing; sin regresiones)
 - [ ] Manual check: en el Android real, comprobar cuál motor se usa y que lee mejor con desenfoque/ángulo — **pendiente, celular**
 
 **Dependencies:** Task 6

@@ -7,7 +7,7 @@ import { Field } from "@/components/ui/Field";
 import { acceptReading, isValidBarcodeInput, normalizeBarcode } from "@/lib/barcode";
 import { scanFeedback, setMuted, unlockAudio, useMuted } from "@/lib/feedback";
 import { createConfirmer } from "@/lib/scan-confirm";
-import { createZxingDecoder } from "@/lib/scan-decoder";
+import { createDecoder } from "@/lib/scan-decoder";
 import { startScanLoop } from "@/lib/scan-loop";
 import {
   CAMERA_CONSTRAINTS,
@@ -55,10 +55,14 @@ export function BarcodeScanner({ onDetected }: Props) {
       await video.play();
       if (cancelled) return;
 
+      // Detector nativo si el navegador lo tiene (Android Chrome); si no, zxing.
+      const decode = await createDecoder();
+      if (cancelled) return;
+
       const confirmer = createConfirmer(CONFIRM_READS, CONFIRM_WINDOW_MS);
       stopLoop = startScanLoop({
         video,
-        decode: createZxingDecoder(),
+        decode,
         onReading: (reading) => {
           setReadWarning(null);
           // Descarta lo que no pasa el filtro (formato, dígito verificador, largo)...

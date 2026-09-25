@@ -1,5 +1,6 @@
 import { expect, test } from "./fixtures/camera";
 import { readCodes } from "./fixtures/make-videos";
+import { gs1CheckDigit } from "../src/lib/barcode";
 import { registerAndLogin } from "./helpers";
 
 // Lectura real por cámara: Chromium sirve un video sintético con códigos de barras
@@ -101,4 +102,36 @@ test("un QR (etiqueta propia) cuadrado cabe en el marco y se lee", async ({ came
   await expect(page.getByText(`No existe un producto con el código ${qr}`)).toBeVisible({
     timeout: READ_TIMEOUT,
   });
+});
+
+test("con BarcodeDetector nativo (Android) se usa ese motor y un UPC-A queda normalizado a GTIN-13", async ({
+  cameraPage,
+}) => {
+  const page = await cameraPage("outside"); // el video da igual: el detector simulado no mira la imagen
+  const body = `0${Math.floor(Math.random() * 1e10).toString().padStart(10, "0")}`; // 11 dígitos
+  const upcA = `${body}${gs1CheckDigit(body)}`;
+
+  // Chromium de escritorio no trae BarcodeDetector: se simula el de Android.
+  await page.addInitScript((code) => {
+    const w = window as unknown as Record<string, unknown>;
+    w.__nativeDetectCalls = 0;
+    w.BarcodeDetector = class {
+      static async getSupportedFormats() {
+        return ["upc_a", "ean_13", "qr_code"];
+      }
+      async detect() {
+        (w.__nativeDetectCalls as number)++;
+        return [{ rawValue: code, format: "upc_a", boundingBox: { width: 300, height: 100 } }];
+      }
+    };
+  }, upcA);
+  await registerAndLogin(page);
+
+  await page.goto("/scan");
+
+  // Llega como UPC-A de 12 dígitos y se guarda/busca como GTIN-13 (un 0 adelante).
+  await expect(page.getByText(`No existe un producto con el código 0${upcA}`)).toBeVisible({
+    timeout: READ_TIMEOUT,
+  });
+  expect(await page.evaluate(() => (window as unknown as Record<string, number>).__nativeDetectCalls)).toBeGreaterThan(2);
 });
