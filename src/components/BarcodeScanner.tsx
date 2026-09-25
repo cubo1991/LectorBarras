@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
+  CAMERA_CONSTRAINTS,
   cameraErrorMessage,
   createBarcodeReader,
   insecureContextError,
@@ -34,8 +35,8 @@ export function BarcodeScanner({ onDetected }: Props) {
       // getUserMedia sale por el mismo .catch() que un permiso denegado.
       if (!isCameraAvailable()) throw insecureContextError();
 
-      return reader.decodeFromVideoDevice(
-        undefined,
+      return reader.decodeFromConstraints(
+        CAMERA_CONSTRAINTS,
         videoRef.current ?? undefined,
         (result, error) => {
           if (result) {

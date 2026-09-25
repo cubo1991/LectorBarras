@@ -2,7 +2,23 @@ import { BrowserMultiFormatReader } from "@zxing/browser";
 import { BarcodeFormat, DecodeHintType } from "@zxing/library";
 
 const hints = new Map();
-hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.EAN_13, BarcodeFormat.UPC_A]);
+hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+  BarcodeFormat.EAN_13,
+  BarcodeFormat.UPC_A,
+  BarcodeFormat.EAN_8,
+]);
+// Más lento por frame, pero las webcams de notebook (foco fijo, mucho ruido) fallan sin esto.
+hints.set(DecodeHintType.TRY_HARDER, true);
+
+// El default de zxing pide ~640x480, poco para leer las barras finas de un código
+// chico con una webcam. "ideal" no rompe si la cámara no llega a esa resolución.
+export const CAMERA_CONSTRAINTS: MediaStreamConstraints = {
+  video: {
+    facingMode: { ideal: "environment" },
+    width: { ideal: 1920 },
+    height: { ideal: 1080 },
+  },
+};
 
 export function createBarcodeReader() {
   return new BrowserMultiFormatReader(hints);
