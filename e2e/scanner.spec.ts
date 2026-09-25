@@ -144,8 +144,8 @@ test("una cámara sin linterna ni zoom (webcam) no muestra esos controles", asyn
   await page.goto("/scan");
   await expect(page.getByText("Iniciando cámara…")).toBeHidden({ timeout: READ_TIMEOUT });
 
-  await expect(page.getByRole("button", { name: /Sonido/ })).toBeVisible();
-  await expect(page.getByRole("button", { name: /Linterna/ })).toHaveCount(0);
+  await expect(page.getByRole("switch", { name: "Sonido" })).toBeVisible();
+  await expect(page.getByRole("switch", { name: "Linterna" })).toHaveCount(0);
   await expect(page.getByRole("slider", { name: "Zoom" })).toHaveCount(0);
 });
 
@@ -175,8 +175,10 @@ test("con linterna y zoom declarados (Android) aparecen y aplican las constraint
   // El enfoque continuo se pide solo, sin que el usuario haga nada.
   await expect.poll(applied).toContainEqual({ advanced: [{ focusMode: "continuous" }] });
 
-  await page.getByRole("button", { name: "Linterna: apagada" }).click();
-  await expect(page.getByRole("button", { name: "Linterna: encendida" })).toBeVisible();
+  const torch = page.getByRole("switch", { name: "Linterna" });
+  await expect(torch).toHaveAttribute("aria-checked", "false");
+  await torch.click();
+  await expect(torch).toHaveAttribute("aria-checked", "true");
   expect(await applied()).toContainEqual({ advanced: [{ torch: true }] });
 
   await page.getByRole("slider", { name: "Zoom" }).fill("2.5");
@@ -232,7 +234,7 @@ for (const colorScheme of ["light", "dark"] as const) {
 
     await page.goto("/scan");
     await expect(page.getByText("Iniciando cámara…")).toBeHidden({ timeout: READ_TIMEOUT });
-    await expect(page.getByRole("button", { name: /Linterna/ })).toBeVisible();
+    await expect(page.getByRole("switch", { name: "Linterna" })).toBeVisible();
 
     const { violations } = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
     expect(violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`)).toEqual([]);
@@ -297,4 +299,24 @@ test("si el código sale del marco y vuelve, se busca de nuevo: una vez por pres
   // Y no se buscó de más: como mucho una por presentación (una cada ~4 s) más la de margen.
   const elapsedSeconds = (Date.now() - startedAt) / 1000;
   expect(lookups).toBeLessThanOrEqual(Math.ceil(elapsedSeconds / 4) + 1);
+});
+
+test("Sonido es un interruptor con etiqueta fija: se opera con teclado y la preferencia persiste", async ({
+  cameraPage,
+}) => {
+  const page = await cameraPage("outside");
+  await registerAndLogin(page);
+  await page.goto("/scan");
+  await expect(page.getByText("Iniciando cámara…")).toBeHidden({ timeout: READ_TIMEOUT });
+
+  const sound = page.getByRole("switch", { name: "Sonido" });
+  await expect(sound).toHaveAttribute("aria-checked", "true"); // por defecto suena
+
+  await sound.focus();
+  await page.keyboard.press("Space"); // Espacio lo alterna
+  await expect(sound).toHaveAttribute("aria-checked", "false");
+  expect((await sound.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+
+  await page.reload();
+  await expect(page.getByRole("switch", { name: "Sonido" })).toHaveAttribute("aria-checked", "false"); // persiste
 });

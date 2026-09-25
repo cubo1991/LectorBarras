@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
+import { Switch } from "@/components/ui/Switch";
 import { acceptReading, isValidBarcodeInput, normalizeBarcode } from "@/lib/barcode";
 import { scanFeedback, setMuted, unlockAudio, useMuted } from "@/lib/feedback";
 import {
@@ -246,14 +247,8 @@ export function BarcodeScanner({ onDetected }: Props) {
               />
             </label>
           )}
-          {controls.torch && (
-            <Button variant="secondary" onClick={() => void handleTorch()} className="text-sm">
-              {torchOn ? "Linterna: encendida" : "Linterna: apagada"}
-            </Button>
-          )}
-          <Button variant="secondary" onClick={() => setMuted(!muted)} className="ml-auto text-sm">
-            {muted ? "Sonido: silenciado" : "Sonido: activado"}
-          </Button>
+          {controls.torch && <Switch label="Linterna" checked={torchOn} onChange={() => void handleTorch()} />}
+          <Switch label="Sonido" checked={!muted} onChange={(on) => setMuted(!on)} className="ml-auto" />
         </div>
       )}
       {fatalError && <Alert>{fatalError}</Alert>}

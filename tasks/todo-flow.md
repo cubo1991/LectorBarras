@@ -158,18 +158,20 @@ Spec: `SPEC-flow.md` · Plan y decisiones: `tasks/plan-flow.md`
 
 ## Phase 3: Modo recepción y ayuda
 
-### Task 6: Interruptores accesibles (Sonido, Linterna)
+### Task 6: Interruptores accesibles (Sonido, Linterna) ✅
+
+> Hecho; 119 unit y 51 e2e en verde. `Switch` propio (`role=switch`, `aria-checked`, etiqueta fija, perilla que se mueve además de cambiar de color). Ojo con la semántica: **Sonido activado = interruptor encendido** (`checked = !muted`). Se opera con Espacio, mide ≥ 44 px y la preferencia persiste tras recargar (e2e con teclado). Axe a 360 px en claro y oscuro con linterna y zoom visibles sigue en verde.
 
 **Description:** Componente `Switch` (`role="switch"`, `aria-checked`, etiqueta fija) y reemplazo de los botones "Sonido: activado/silenciado" y "Linterna: apagada/encendida".
 
 **Acceptance criteria:**
-- [ ] Sonido y Linterna son `switch` con etiqueta fija ("Sonido", "Linterna") y `aria-checked` refleja el estado
-- [ ] Se operan con teclado (Espacio/Enter) y miden ≥ 44 px
-- [ ] Funcionan igual que antes: silenciar persiste; la linterna sólo aparece si el dispositivo la ofrece
-- [ ] Los e2e que buscaban los textos viejos se actualizan
+- [x] Sonido y Linterna son `switch` con etiqueta fija ("Sonido", "Linterna") y `aria-checked` refleja el estado
+- [x] Se operan con teclado (Espacio/Enter) y miden ≥ 44 px
+- [x] Funcionan igual que antes: silenciar persiste; la linterna sólo aparece si el dispositivo la ofrece
+- [x] Los e2e que buscaban los textos viejos se actualizan
 
 **Verification:**
-- [ ] E2E: `npx playwright test e2e/scanner.spec.ts` y `npm run test:e2e` completo (a11y y responsive incluidos)
+- [x] E2E: `npx playwright test e2e/scanner.spec.ts` y `npm run test:e2e` completo (a11y y responsive incluidos)
 
 **Dependencies:** Task 3
 
