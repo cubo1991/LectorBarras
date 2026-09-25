@@ -34,9 +34,9 @@ export default function RegisterPage() {
           {pending ? "Creando cuenta..." : "Registrarme"}
         </Button>
       </form>
-      <p className="text-sm text-muted">
-        ¿Ya tenés cuenta?{" "}
-        <Link href="/login" className="font-medium text-accent underline">
+      <p className="flex flex-wrap items-center gap-x-2 text-sm text-muted">
+        ¿Ya tenés cuenta?
+        <Link href="/login" className="inline-flex min-h-11 items-center font-medium text-accent underline">
           Iniciar sesión
         </Link>
       </p>

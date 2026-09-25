@@ -242,18 +242,20 @@ Spec: `SPEC-front.md` · Plan y decisiones: `tasks/plan-front.md`
 
 ## Phase 5: Verificación transversal
 
-### Task 9: Proyecto Playwright mobile y e2e responsive
+### Task 9: Proyecto Playwright mobile y e2e responsive ✅
+
+> Hecho. El test encontró un defecto real: los links "Crear cuenta" / "Iniciar sesión" de login/registro medían 85×18 px; ahora son 44 px de alto. Cubre `/login`, `/register`, `/`, `/scan`, `/products` y la ficha de producto con "Sin stock". `npm run test:e2e` corre los dos proyectos: `chromium` (flujos) y `mobile` (sólo responsive).
 
 **Description:** Agregar un proyecto `mobile` (360×740, touch) que sólo corre `responsive.spec.ts`, el cual recorre cada pantalla y verifica sin scroll horizontal y controles interactivos ≥ 44×44 px.
 
 **Acceptance criteria:**
-- [ ] `playwright.config.ts` define el proyecto `mobile` con `testMatch: /responsive\.spec\.ts/`; los otros e2e siguen corriendo sólo en `chromium`
-- [ ] `responsive.spec.ts` cubre `/login`, `/register`, `/`, `/scan`, `/products`: `scrollWidth <= clientWidth` y tamaño mínimo de botones, links e inputs
-- [ ] Si una pantalla falla, se corrige en esta tarea (no se relaja el test)
+- [x] `playwright.config.ts` define el proyecto `mobile` con `testMatch: /responsive\.spec\.ts/`; los otros e2e siguen corriendo sólo en `chromium`
+- [x] `responsive.spec.ts` cubre `/login`, `/register`, `/`, `/scan`, `/products`: `scrollWidth <= clientWidth` y tamaño mínimo de botones, links e inputs
+- [x] Si una pantalla falla, se corrige en esta tarea (no se relaja el test)
 
 **Verification:**
-- [ ] E2E: `npx playwright test --project=mobile`
-- [ ] E2E: `npm run test:e2e` completo (los 15 previos siguen igual)
+- [x] E2E: `npx playwright test --project=mobile`
+- [x] E2E: `npm run test:e2e` completo (los 15 previos siguen igual)
 
 **Dependencies:** Tasks 3, 4, 5, 6
 

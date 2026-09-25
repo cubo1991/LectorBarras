@@ -34,9 +34,9 @@ export default function LoginPage() {
           {pending ? "Entrando..." : "Entrar"}
         </Button>
       </form>
-      <p className="text-sm text-muted">
-        ¿No tenés cuenta?{" "}
-        <Link href="/register" className="font-medium text-accent underline">
+      <p className="flex flex-wrap items-center gap-x-2 text-sm text-muted">
+        ¿No tenés cuenta?
+        <Link href="/register" className="inline-flex min-h-11 items-center font-medium text-accent underline">
           Crear cuenta
         </Link>
       </p>

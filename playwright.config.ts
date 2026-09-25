@@ -15,7 +15,17 @@ export default defineConfig({
   use: {
     baseURL: "http://localhost:3000",
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    // Todo el suite de flujos corre en desktop; el responsive tiene su propio proyecto.
+    { name: "chromium", testIgnore: /responsive\.spec\.ts/, use: { ...devices["Desktop Chrome"] } },
+    // Celular chico (360x740, touch). Sólo corre las verificaciones de responsive: no
+    // duplica los flujos, que ya cubre "chromium".
+    {
+      name: "mobile",
+      testMatch: /responsive\.spec\.ts/,
+      use: { ...devices["Desktop Chrome"], viewport: { width: 360, height: 740 }, hasTouch: true, isMobile: true },
+    },
+  ],
   webServer: {
     // Build de producción, no `next dev`: con el dev server cada ruta se compila
     // en el primer request (decenas de segundos en este disco) y el evento
