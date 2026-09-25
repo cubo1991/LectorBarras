@@ -320,3 +320,42 @@ test("Sonido es un interruptor con etiqueta fija: se opera con teclado y la pref
   await page.reload();
   await expect(page.getByRole("switch", { name: "Sonido" })).toHaveAttribute("aria-checked", "false"); // persiste
 });
+
+test("la ayuda contextual: a los ~8 s sugiere acercar o alejar y a los ~20 s el ingreso manual", async ({
+  cameraPage,
+}) => {
+  const page = await cameraPage("outside"); // nada legible dentro del marco
+  await registerAndLogin(page);
+
+  await page.goto("/scan");
+  await expect(page.getByText("Poné el código dentro del marco")).toBeVisible({ timeout: READ_TIMEOUT });
+
+  await expect(page.getByText("Probá acercar o alejar un poco el celular")).toBeVisible({ timeout: 14_000 });
+  await expect(page.getByText("¿Te cuesta? Escribí el código abajo")).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByText("Probá acercar o alejar un poco el celular")).toHaveCount(0); // reemplaza a la anterior
+});
+
+test("con linterna disponible, la pista de los 8 s la menciona", async ({ cameraPage }) => {
+  const page = await cameraPage("outside");
+  await page.addInitScript(() => {
+    const proto = MediaStreamTrack.prototype as unknown as Record<string, unknown>;
+    proto.getCapabilities = () => ({ torch: true });
+  });
+  await registerAndLogin(page);
+
+  await page.goto("/scan");
+
+  await expect(page.getByText(/Si hay poca luz, encendé la linterna/)).toBeVisible({ timeout: 25_000 });
+});
+
+test("una lectura válida devuelve la pista al mensaje base", async ({ cameraPage }) => {
+  const page = await cameraPage("receptionPulse"); // se muestra, se retira, se vuelve a mostrar
+  await registerAndLogin(page);
+
+  await page.goto("/scan");
+
+  // Con un código que aparece cada ~4 s nunca pasan 8 s sin una lectura válida.
+  await page.waitForTimeout(12_000);
+  await expect(page.getByText("Probá acercar o alejar un poco el celular")).toHaveCount(0);
+  await expect(page.getByText("¿Te cuesta? Escribí el código abajo")).toHaveCount(0);
+});

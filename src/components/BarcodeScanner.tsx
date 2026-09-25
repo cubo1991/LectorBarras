@@ -16,6 +16,7 @@ import {
   type CameraControls,
 } from "@/lib/scan-camera";
 import { createConfirmer } from "@/lib/scan-confirm";
+import { helpFor } from "@/lib/scan-help";
 import { createRearm } from "@/lib/scan-rearm";
 import { createDecoder } from "@/lib/scan-decoder";
 import { startScanLoop } from "@/lib/scan-loop";
@@ -39,7 +40,6 @@ const FRAME_STYLE = {
 } as const;
 
 const PHASE_TEXT = {
-  searching: "Poné el código dentro del marco",
   reading: "Leyendo…",
   confirmed: "✓ Código confirmado",
 } as const;
@@ -65,6 +65,9 @@ export function BarcodeScanner({ onDetected, onManualEntry }: Props) {
   // El video puede tardar en arrancar (permiso, cámara lenta): sin este estado el
   // visor queda negro y mudo, indistinguible de una falla.
   const [ready, setReady] = useState(false);
+  // Cuánto hace que no hay ninguna lectura válida: alimenta la ayuda contextual (8 s / 20 s).
+  const lastValidAt = useRef(0); // se inicializa cuando la cámara arranca (Date.now() no es puro en el render)
+  const [msWithoutReading, setMsWithoutReading] = useState(0);
   // Estado del marco: buscando → leyendo (hay una lectura válida sin confirmar) → confirmado.
   const [phase, setPhase] = useState<"searching" | "reading" | "confirmed">("searching");
   const phaseTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -138,6 +141,7 @@ export function BarcodeScanner({ onDetected, onManualEntry }: Props) {
           // Descarta lo que no pasa el filtro (formato, dígito verificador, largo)...
           const code = acceptReading(reading.text, reading.format);
           if (!code) return;
+          lastValidAt.current = Date.now();
           showPhase("reading", READING_HOLD_MS);
           rearm.observe(code, Date.now());
           // ...y sólo acepta un código tras varias lecturas iguales seguidas.
@@ -185,6 +189,14 @@ export function BarcodeScanner({ onDetected, onManualEntry }: Props) {
     if (applied !== null) setZoomValue(applied);
   }
 
+  // Cuando la cámara ya anda, se mide el tiempo sin lecturas (una vez por segundo alcanza).
+  useEffect(() => {
+    if (!ready) return;
+    lastValidAt.current = Date.now();
+    const timer = setInterval(() => setMsWithoutReading(Date.now() - lastValidAt.current), 1000);
+    return () => clearInterval(timer);
+  }, [ready]);
+
   function handleManualSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!isValidBarcodeInput(manualCode)) {
@@ -229,7 +241,7 @@ export function BarcodeScanner({ onDetected, onManualEntry }: Props) {
               role="status"
               className="absolute inset-x-0 bottom-2 mx-auto w-fit rounded-full bg-black/70 px-3 py-1 text-sm text-white"
             >
-              {PHASE_TEXT[phase]}
+              {phase === "searching" ? helpFor(msWithoutReading, { torchAvailable: controls.torch }).text : PHASE_TEXT[phase]}
             </p>
           )}
         </div>

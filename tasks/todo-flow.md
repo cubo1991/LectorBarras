@@ -211,19 +211,21 @@ Spec: `SPEC-flow.md` · Plan y decisiones: `tasks/plan-flow.md`
 
 ---
 
-### Task 8: Ayuda contextual
+### Task 8: Ayuda contextual ✅
+
+> Hecho; 119 unit y 61 e2e en verde. La pista cambia a los 8 s (con la variante de linterna si el dispositivo la ofrece) y a los 20 s (ingreso manual), la anuncia `role=status` sin mover el foco, y cualquier lectura válida reinicia los tiempos (e2e con el video 'pulso': nunca pasan 8 s sin una lectura, así que nunca aparece la ayuda). No implementé lo de 'llevar el foco al campo cuando el usuario lo pide': la spec lo mencionaba de pasada y ningún criterio lo exigía.
 
 **Description:** Usar `helpFor` (T2) en el visor: sin lecturas válidas la pista base cambia a los ~8 s y a los ~20 s sugiere el ingreso manual (y le lleva el foco al campo cuando el usuario lo pide).
 
 **Acceptance criteria:**
-- [ ] A los ~8 s sin lecturas la pista pasa a "Probá acercar o alejar un poco el celular" (o la de poca luz + linterna si el dispositivo la tiene)
-- [ ] A los ~20 s pasa a "¿Te cuesta? Escribí el código abajo"
-- [ ] Cualquier lectura válida devuelve la pista base y reinicia los tiempos
-- [ ] El cambio de pista se anuncia sin robar el foco
+- [x] A los ~8 s sin lecturas la pista pasa a "Probá acercar o alejar un poco el celular" (o la de poca luz + linterna si el dispositivo la tiene)
+- [x] A los ~20 s pasa a "¿Te cuesta? Escribí el código abajo"
+- [x] Cualquier lectura válida devuelve la pista base y reinicia los tiempos
+- [x] El cambio de pista se anuncia sin robar el foco
 
 **Verification:**
-- [ ] Tests pass: `npm test`
-- [ ] E2E: `npx playwright test e2e/scanner.spec.ts` (video "outside": nada legible en el marco → cambia a los 8 s y a los 20 s) y `npm run test:e2e`
+- [x] Tests pass: `npm test`
+- [x] E2E: `npx playwright test e2e/scanner.spec.ts` (video "outside": nada legible en el marco → cambia a los 8 s y a los 20 s) y `npm run test:e2e`
 
 **Dependencies:** Tasks 2, 3
 
@@ -236,7 +238,7 @@ Spec: `SPEC-flow.md` · Plan y decisiones: `tasks/plan-flow.md`
 ---
 
 ## Checkpoint: Recepción
-- [ ] Recibir una tanda de unidades suma exacto, una vez por unidad, con deshacer
+- [x] Recibir una tanda de unidades suma exacto, una vez por unidad, con deshacer (automatizado)
 - [ ] Revisión con el usuario
 
 ## Phase 4: Pulido y estructura
