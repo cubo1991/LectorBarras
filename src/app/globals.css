@@ -1,26 +1,72 @@
 @import "tailwindcss";
 
+/*
+ * Tokens de diseño. Los componentes usan sólo clases de token (bg-surface,
+ * text-muted, border-border-strong, bg-accent…): el modo oscuro sale de este
+ * único lugar y no hace falta `dark:` en el JSX.
+ *
+ * Contrastes verificados (WCAG 2.1 AA: texto ≥ 4.5:1, bordes de controles ≥ 3:1):
+ *   claro  fg/bg 17.9 · muted/bg 7.7 · accent-fg/accent 6.7 · success 5.0 · warning 4.9 · danger 6.5 · border-strong 4.8
+ *   oscuro fg/bg 16.9 · muted/bg 7.7 · accent-fg/accent 7.8 · success 11.4 · warning 12.9 · danger 7.2 · border-strong 4.1
+ * Si se cambia un valor, recalcular el par afectado.
+ */
 :root {
+  color-scheme: light dark;
+
   --background: #ffffff;
   --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --surface: #f4f4f5;
+  --muted: #52525b;
+  --border: #d4d4d8; /* decorativo: divisores, bordes de tarjetas */
+  --border-strong: #71717a; /* bordes de controles (inputs, botones secundarios) */
+  --accent: #1d4ed8;
+  --accent-foreground: #ffffff;
+  --success: #15803d;
+  --warning: #a16207;
+  --danger: #b91c1c;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --surface: #18181b;
+    --muted: #a1a1aa;
+    --border: #3f3f46;
+    --border-strong: #71717a;
+    --accent: #60a5fa;
+    --accent-foreground: #0a0a0a;
+    --success: #4ade80;
+    --warning: #facc15;
+    --danger: #f87171;
   }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --radius-control: 0.5rem;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* Foco visible para todo control, en ambos esquemas (WCAG 2.4.7). */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
