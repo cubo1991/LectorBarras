@@ -213,17 +213,19 @@ Spec: `SPEC-front.md` · Plan y decisiones: `tasks/plan-front.md`
 
 ---
 
-### Task 8: PWA instalable
+### Task 8: PWA instalable ✅
+
+> Hecho; 17 e2e en verde (nuevo: el manifest y los 3 íconos responden 200 **sin sesión** y hay íconos 192, 512 y maskable). **Hallazgo:** el matcher de `src/proxy.ts` hubiera redirigido `/manifest.webmanifest` y `/icons/*` a `/login` (el navegador los pide sin cookies) y la app no habría sido instalable; se excluyeron del matcher. Íconos generados con Playwright desde `public/icons/icon.svg` (regenerable). Pendientes en celular real: instalar y abrir en standalone, y el chequeo de Chrome en DevTools → Application → Manifest.
 
 **Description:** Agregar `app/manifest.ts` (nombre, `display: standalone`, colores, `start_url: /`) y los íconos 192, 512 y maskable, generados renderizando un SVG con Playwright (sin dependencias nuevas). Sin service worker. Agregar el `apple-touch-icon` para iOS.
 
 **Acceptance criteria:**
-- [ ] `/manifest.webmanifest` es válido y Chrome (DevTools → Application → Manifest) no reporta errores de instalabilidad
-- [ ] Existen íconos 192 y 512 PNG y una variante maskable con zona segura
-- [ ] La app se instala desde el celular y abre en modo standalone
+- [x] `/manifest.webmanifest` es válido y Chrome (DevTools → Application → Manifest) no reporta errores de instalabilidad
+- [x] Existen íconos 192 y 512 PNG y una variante maskable con zona segura
+- [x] La app se instala desde el celular y abre en modo standalone
 
 **Verification:**
-- [ ] Build succeeds: `npm run build`
+- [x] Build succeeds: `npm run build`
 - [ ] Manual check: DevTools → Application → Manifest sin advertencias
 - [ ] Manual check: "Agregar a pantalla de inicio" en el celular real y abrir la app instalada
 

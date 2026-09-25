@@ -15,6 +15,8 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "LectorBarras",
   description: "Inventario por código de barras: escaneá un producto y ajustá su stock.",
+  icons: { apple: "/icons/apple-touch-icon.png" },
+  appleWebApp: { capable: true, title: "LectorBarras" },
 };
 
 // Color de la barra del navegador según el esquema (coincide con --background).

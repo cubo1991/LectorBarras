@@ -11,5 +11,7 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ["/((?!api/auth|_next/static|_next/image|favicon.ico).*)"],
+  // manifest e íconos son públicos: el navegador los pide sin cookies y, si
+  // redirigieran a /login, la app no sería instalable.
+  matcher: ["/((?!api/auth|_next/static|_next/image|favicon.ico|manifest.webmanifest|icons/).*)"],
 };

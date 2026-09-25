@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Fondo a sangre: sirve como ícono "maskable" (el recorte del sistema no deja bordes).
+       Las barras quedan dentro del 60 % central, la zona segura de un ícono maskable. -->
+  <rect width="512" height="512" fill="#1d4ed8"/>
+  <g fill="#ffffff">
+    <rect x="128" y="150" width="16" height="212"/>
+    <rect x="160" y="150" width="8" height="212"/>
+    <rect x="176" y="150" width="24" height="212"/>
+    <rect x="216" y="150" width="8" height="212"/>
+    <rect x="232" y="150" width="16" height="212"/>
+    <rect x="264" y="150" width="8" height="212"/>
+    <rect x="280" y="150" width="24" height="212"/>
+    <rect x="320" y="150" width="16" height="212"/>
+    <rect x="352" y="150" width="8" height="212"/>
+    <rect x="368" y="150" width="16" height="212"/>
+  </g>
+  <rect x="108" y="252" width="296" height="8" rx="4" fill="#fbbf24"/>
+</svg>
