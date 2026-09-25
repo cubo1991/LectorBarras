@@ -124,7 +124,7 @@ Ver decisiones de arquitectura y riesgos en `tasks/plan.md`.
 **Verification:**
 - [x] Tests pass: `npm test` (lógica de parseo/validación del código, sin depender de cámara real)
 - [x] Build succeeds: `npm run build`
-- [x] Manual check: escaneo real en celular (producción, HTTPS) — funciona. Falta confirmar con webcam de notebook
+- [x] Manual check: escaneo real en celular (producción, HTTPS) — funciona; en webcam de notebook también, aunque cuesta (foco fijo). Se mejoró con 1080p + TRY_HARDER
 
 **Dependencies:** Task 1
 
