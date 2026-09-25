@@ -13,6 +13,9 @@ function ScanPageContent() {
   const [loading, setLoading] = useState(false);
   const [adjustError, setAdjustError] = useState<string | null>(null);
   const [lookupError, setLookupError] = useState<string | null>(null);
+  // Tras un ajuste: se resalta el número y se anuncia el cambio a los lectores de pantalla.
+  const [justAdjusted, setJustAdjusted] = useState(false);
+  const [announcement, setAnnouncement] = useState("");
   // Cada búsqueda lleva un número: si otra empezó mientras tanto, sólo la última pinta.
   const latestLookup = useRef(0);
 
@@ -23,6 +26,8 @@ function ScanPageContent() {
     setLoading(true);
     setAdjustError(null);
     setLookupError(null);
+    setJustAdjusted(false);
+    setAnnouncement("");
     try {
       const lookup = await lookupProductByBarcode(barcode);
       if (mine === latestLookup.current) setResult(lookup);
@@ -48,14 +53,18 @@ function ScanPageContent() {
     handleDetected(codeFromUrl);
   }, [codeFromUrl, handleDetected]);
 
-  async function handleAdjust(productId: string, delta: number) {
+  /** Devuelve `true` si el ajuste se aplicó. */
+  async function handleAdjust(productId: string, delta: number): Promise<boolean> {
     setAdjustError(null);
     const outcome = await adjustStock({ productId, delta });
     if (!outcome.ok) {
       setAdjustError(outcome.error);
-      return;
+      return false;
     }
     setResult({ found: true, product: outcome.product });
+    setJustAdjusted(true);
+    setAnnouncement(`${outcome.product.name}: stock actualizado a ${outcome.product.stock}`);
+    return true;
   }
 
   return (
@@ -73,6 +82,8 @@ function ScanPageContent() {
           result={result}
           loading={loading}
           adjustError={adjustError}
+          justAdjusted={justAdjusted}
+          announcement={announcement}
           onAdjust={handleAdjust}
           onCreated={(product) => setResult({ found: true, product })}
         />

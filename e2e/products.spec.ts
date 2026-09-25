@@ -49,7 +49,7 @@ test("desde un resultado se llega al ajuste de stock", async ({ page }) => {
   await expect(page).toHaveURL(`/scan?code=${barcode}`);
   await expect(page.getByText("Stock actual: 2")).toBeVisible();
 
-  await page.getByRole("button", { name: "+1" }).click();
+  await page.getByRole("button", { name: "+1", exact: true }).click();
   await expect(page.getByText("Stock actual: 3")).toBeVisible();
 });
 

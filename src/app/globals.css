@@ -65,6 +65,24 @@ body {
   font-family: var(--font-sans), system-ui, sans-serif;
 }
 
+/* Resaltado breve del stock cuando cambia por un ajuste. */
+@keyframes stock-flash {
+  from {
+    background-color: color-mix(in srgb, var(--accent) 35%, transparent);
+  }
+  to {
+    background-color: transparent;
+  }
+}
+.stock-flash {
+  animation: stock-flash 700ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .stock-flash {
+    animation: none;
+  }
+}
+
 /* Foco visible para todo control, en ambos esquemas (WCAG 2.4.7). */
 :focus-visible {
   outline: 2px solid var(--accent);

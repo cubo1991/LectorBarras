@@ -94,20 +94,22 @@ Spec: `SPEC-flow.md` · Plan y decisiones: `tasks/plan-flow.md`
 
 ---
 
-### Task 4: Cantidades, "Otra cantidad" y confirmación visible del ajuste
+### Task 4: Cantidades, "Otra cantidad" y confirmación visible del ajuste ✅
+
+> Hecho; 119 unit y 46 e2e en verde (a11y y responsive a 360 px incluyen la ficha con los controles nuevos: 4 chips en una fila, el campo y los dos botones miden ≥ 44 px). `onAdjust` ahora devuelve `Promise<boolean>` para limpiar el campo sólo si el ajuste se aplicó. El resaltado usa una animación CSS (`stock-flash`) que se apaga con `prefers-reduced-motion`. Los locators `+1`/`-1` de los e2e pasaron a `exact: true`: con `+10` el nombre `+1` coincidía por subcadena con dos botones. Manual pendiente: alcanzar los chips con el pulgar en el celular.
 
 **Description:** En la ficha: `-1 · +1 · +5 · +10` y "Otra cantidad" (campo numérico con Sumar/Restar). Al ajustar, el número se resalta un instante y se anuncia por `aria-live` ("Stock actualizado a 13"). Errores claros para 0, negativos y > 9999.
 
 **Acceptance criteria:**
-- [ ] `+5` y `+10` suman esa cantidad; "Otra cantidad" suma o resta la cantidad ingresada
-- [ ] 0, vacío, no numérico y > 9999 muestran un mensaje claro y no ajustan
-- [ ] Restar más de lo que hay muestra "No hay stock suficiente" y el stock no cambia
-- [ ] Todo ajuste se anuncia en una región `aria-live="polite"` y el número se resalta
-- [ ] Todos los controles miden ≥ 44 px a 360 px de ancho
+- [x] `+5` y `+10` suman esa cantidad; "Otra cantidad" suma o resta la cantidad ingresada
+- [x] 0, vacío, no numérico y > 9999 muestran un mensaje claro y no ajustan
+- [x] Restar más de lo que hay muestra "No hay stock suficiente" y el stock no cambia
+- [x] Todo ajuste se anuncia en una región `aria-live="polite"` y el número se resalta
+- [x] Todos los controles miden ≥ 44 px a 360 px de ancho
 
 **Verification:**
-- [ ] Tests pass: `npm test`
-- [ ] E2E: `npm run test:e2e` (cantidades, "Otra cantidad", errores, anuncio) y `npx playwright test --project=mobile`
+- [x] Tests pass: `npm test`
+- [x] E2E: `npm run test:e2e` (cantidades, "Otra cantidad", errores, anuncio) y `npx playwright test --project=mobile`
 - [ ] Manual check: en el celular, alcanzar los chips con el pulgar
 
 **Dependencies:** Task 3

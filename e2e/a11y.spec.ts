@@ -47,7 +47,7 @@ for (const colorScheme of ["light", "dark"] as const) {
 
       // Ficha con "Sin stock" y error de stock negativo.
       await createProduct(page, { name: "a11y", stock: 0 });
-      await page.getByRole("button", { name: "-1" }).click();
+      await page.getByRole("button", { name: "-1", exact: true }).click();
       await expect(page.getByText("No hay stock suficiente")).toBeVisible();
       await expectNoViolations(page, "/scan (ficha con Sin stock y error)");
     });
