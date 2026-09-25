@@ -49,10 +49,13 @@ const READING_HOLD_MS = 600;
 const CONFIRMED_HOLD_MS = 1500;
 
 type Props = {
+  /** Una lectura de cámara confirmada (una vez por presentación del código). */
   onDetected: (code: string) => void;
+  /** Un código tipeado a mano. Si no se pasa, se trata igual que una lectura de cámara. */
+  onManualEntry?: (code: string) => void;
 };
 
-export function BarcodeScanner({ onDetected }: Props) {
+export function BarcodeScanner({ onDetected, onManualEntry }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   // Fatal: la cámara nunca arrancó o no está disponible → no mostramos el video.
   const [fatalError, setFatalError] = useState<string | null>(null);
@@ -189,7 +192,7 @@ export function BarcodeScanner({ onDetected }: Props) {
       return;
     }
     setManualError(null);
-    onDetected(normalizeBarcode(manualCode));
+    (onManualEntry ?? onDetected)(normalizeBarcode(manualCode));
   }
 
   return (

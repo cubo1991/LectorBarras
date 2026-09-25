@@ -23,8 +23,8 @@ const BAR = 16; // negro en rango de video (Y)
 export const FIXTURE_DIR = path.resolve(process.cwd(), "e2e", ".fixtures");
 const CODES_FILE = path.join(FIXTURE_DIR, "codes.json");
 
-export type FixtureCodes = { inside: string; outside: string; code128: string; badChecksum: string; qr: string };
-export type FixtureName = "inside" | "outside" | "outsideCentered" | "two" | "code128" | "badChecksum" | "qr" | "pulse";
+export type FixtureCodes = { inside: string; outside: string; code128: string; badChecksum: string; qr: string; reception: string };
+export type FixtureName = "inside" | "outside" | "outsideCentered" | "two" | "code128" | "badChecksum" | "qr" | "pulse" | "receptionStatic" | "receptionPulse";
 
 // ---- Codificadores (módulos: true = barra) -------------------------------------------
 
@@ -124,6 +124,9 @@ export function generateFixtures(): FixtureCodes {
   const codes: FixtureCodes = {
     inside: randomEan13(),
     outside: randomEan13(),
+    // Código propio de los e2e de recepción: esos tests CREAN el producto, así que no puede
+    // compartirse con los que esperan "No existe un producto…" (scanner.spec).
+    reception: randomEan13(),
     qr: `QR-${Math.floor(Math.random() * 1e6).toString().padStart(6, "0")}`,
     // EAN-13 bien formado pero con el dígito verificador adulterado: nunca debe leerse.
     badChecksum: "",
@@ -156,6 +159,9 @@ export function generateFixtures(): FixtureCodes {
   writeY4m("two", [inside, outside]);
   writeY4m("code128", [code128]);
   // QR cuadrado de 360 px, centrado: cabe en el alto del marco (396 px), que es lo que lo hace tolerante.
+  const reception = centered(ean13Bits(codes.reception), 5, 200);
+  writeY4m("receptionStatic", [reception]);
+  writeY4mFrames("receptionPulse", [...Array<Scene>(10).fill([reception]), ...Array<Scene>(10).fill([])], 5);
   writeY4m("qr", [{ qr: codes.qr, x: (W - 360) / 2, y: (H - 360) / 2, size: 360 }]);
   writeY4m("badChecksum", [centered(ean13Bits(codes.badChecksum), 5, 200)]);
   writeFileSync(CODES_FILE, JSON.stringify(codes));

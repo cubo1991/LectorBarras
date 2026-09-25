@@ -184,19 +184,21 @@ Spec: `SPEC-flow.md` · Plan y decisiones: `tasks/plan-flow.md`
 
 ---
 
-### Task 7: Modo "Sumar al escanear"
+### Task 7: Modo "Sumar al escanear" ✅
+
+> Hecho; 119 unit y 58 e2e en verde. Modo Suma con `e2e/reception.spec.ts` (cámara falsa; el stock se verifica leyéndolo de la base por `/scan?code=` desde una página aparte, no de lo que muestra la pantalla): Consulta no cambia el stock; un código **quieto** suma exactamente **+1**; `Deshacer último` resta esa unidad; con el video 'pulso' cada presentación suma una y el aviso acumula `+2`; desconocido no suma y ofrece cargar; el modo arranca apagado tras recargar y muestra un aviso fijo; **un código tipeado a mano NO suma ni en modo Suma** (decisión mía, no estaba en la spec: sumar sólo lecturas de cámara). **Mutación:** con `REARM_ABSENT_MS=0` y `REARM_MIN_MISSES=0` el test del código quieto suma **3 unidades en vez de 1** (stock 8 en vez de 6). **Defecto encontrado por un e2e viejo:** el aviso de deshacer (fijo abajo) **tapaba** los botones Sumar/Restar y se llevaba el toque — con riesgo de deshacer sin querer. Reservar espacio no alcanzaba (el elemento seguía a la vista, tapado). Ahora en celular es una barra en el lugar de la navegación (el contenido ya reserva ese espacio) y en escritorio una tarjeta arriba a la derecha, en el margen libre. La lista de decisiones: los handlers de la cámara usan una ref del modo para no cambiar de identidad (reiniciarían la cámara).
 
 **Description:** Interruptor "Sumar al escanear" (no persistente: cada visita arranca en Consulta) con aviso fijo mientras está activo ("Modo suma: cada lectura suma +1"). En ese modo, cada lectura confirmada de un producto conocido llama a `adjustStock(+1)` y muestra el aviso de deshacer, acumulando "+3" si son unidades consecutivas del mismo producto. Un producto desconocido no suma: ofrece "Cargar producto".
 
 **Acceptance criteria:**
-- [ ] En **Consulta**, escanear un producto conocido no cambia su stock (verificado antes/después)
-- [ ] En **Suma**, con el código fijo a la vista 4 s el stock sube **exactamente 1**; al sacarlo y volver a mostrarlo sube otro 1 (fixture "pulso")
-- [ ] Con el modo Suma activo hay un aviso fijo y visible; al volver a `/scan` el modo arranca desactivado
-- [ ] Cada suma automática muestra "+1 · Deshacer" y deshacer resta ese 1
-- [ ] Un producto desconocido en modo Suma no suma y ofrece "Cargar producto"
+- [x] En **Consulta**, escanear un producto conocido no cambia su stock (verificado antes/después)
+- [x] En **Suma**, con el código fijo a la vista 4 s el stock sube **exactamente 1**; al sacarlo y volver a mostrarlo sube otro 1 (fixture "pulso")
+- [x] Con el modo Suma activo hay un aviso fijo y visible; al volver a `/scan` el modo arranca desactivado
+- [x] Cada suma automática muestra "+1 · Deshacer" y deshacer resta ese 1
+- [x] Un producto desconocido en modo Suma no suma y ofrece "Cargar producto"
 
 **Verification:**
-- [ ] E2E: `npx playwright test e2e/scanner.spec.ts` (Consulta sin cambios, Suma una vez y otra al volver, aviso fijo, desconocido) y `npm run test:e2e` completo
+- [x] E2E: `npx playwright test e2e/scanner.spec.ts` (Consulta sin cambios, Suma una vez y otra al volver, aviso fijo, desconocido) y `npm run test:e2e` completo
 - [ ] Manual check: en el Android real, recibir 10 productos de a unidad
 
 **Dependencies:** Tasks 3, 5, 6
