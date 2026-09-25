@@ -126,19 +126,21 @@ Spec: `SPEC-front.md` · Plan y decisiones: `tasks/plan-front.md`
 
 ## Phase 3: Pantallas de inventario
 
-### Task 5: Rediseño de `/scan` (visor, resultado, alta)
+### Task 5: Rediseño de `/scan` (visor, resultado, alta) ✅
+
+> Hecho; 16 e2e en verde. Visor con marco de encuadre y estado "Iniciando cámara…" (antes quedaba negro y mudo hasta que arrancaba). Se crearon `Card` y `Badge`, y `Alert` ganó `tone="warning"` para el aviso de lectura. Manual check en celular real pendiente (checkpoint).
 
 **Description:** Restilizar la pantalla de escaneo: visor con marco y estado legible (iniciando / listo / error), tarjeta de resultado con el stock bien visible y un `Badge` "Sin stock" cuando es 0, botones `-1`/`+1` grandes, y `NewProductForm` con `Field`/`Button`. La lógica no cambia.
 
 **Acceptance criteria:**
-- [ ] El ingreso manual, los mensajes de error de cámara y el aviso de lectura conservan su comportamiento y usan el kit (`Alert`, `Field`, `Button`)
-- [ ] El resultado muestra nombre, código y stock; con stock 0 aparece el `Badge` "Sin stock" (texto, no sólo color)
-- [ ] `-1`/`+1` ≥ 44 px y alcanzables con el pulgar; el "Escanear otro código" sigue funcionando
-- [ ] Los textos que usan los e2e no cambian
+- [x] El ingreso manual, los mensajes de error de cámara y el aviso de lectura conservan su comportamiento y usan el kit (`Alert`, `Field`, `Button`)
+- [x] El resultado muestra nombre, código y stock; con stock 0 aparece el `Badge` "Sin stock" (texto, no sólo color)
+- [x] `-1`/`+1` ≥ 44 px y alcanzables con el pulgar; el "Escanear otro código" sigue funcionando
+- [x] Los textos que usan los e2e no cambian
 
 **Verification:**
-- [ ] E2E: `npm run test:e2e -- e2e/stock.spec.ts`
-- [ ] Build succeeds: `npm run build`
+- [x] E2E: `npm run test:e2e -- e2e/stock.spec.ts`
+- [x] Build succeeds: `npm run build`
 - [ ] Manual check: escanear con el celular real (producción, tras el push), claro y oscuro
 
 **Dependencies:** Task 3
@@ -153,18 +155,20 @@ Spec: `SPEC-front.md` · Plan y decisiones: `tasks/plan-front.md`
 
 ---
 
-### Task 6: Rediseño de `/products` (listado, búsqueda, paginación)
+### Task 6: Rediseño de `/products` (listado, búsqueda, paginación) ✅
+
+> Hecho; 16 e2e en verde. Manual check en celular real pendiente (checkpoint).
 
 **Description:** Restilizar la búsqueda y el listado: campo de búsqueda con `Field`/`Button`, resultados como tarjetas tocables con nombre, código y stock (con `Badge` "Sin stock"), estados vacío y paginación clara. Se conserva la semántica de lista (`<ul>/<li>`) que usan los e2e.
 
 **Acceptance criteria:**
-- [ ] Cada resultado es un link ≥ 44 px que abre `/scan?code=<barcode>` (sin cambios de URL)
-- [ ] Estado vacío diferencia "todavía no hay productos" de "sin coincidencias para «q»"
-- [ ] Paginación con "Página X de Y", "Anterior" y "Siguiente" alcanzables en 360 px
+- [x] Cada resultado es un link ≥ 44 px que abre `/scan?code=<barcode>` (sin cambios de URL)
+- [x] Estado vacío diferencia "todavía no hay productos" de "sin coincidencias para «q»"
+- [x] Paginación con "Página X de Y", "Anterior" y "Siguiente" alcanzables en 360 px
 
 **Verification:**
-- [ ] E2E: `npm run test:e2e -- e2e/products.spec.ts`
-- [ ] Build succeeds: `npm run build`
+- [x] E2E: `npm run test:e2e -- e2e/products.spec.ts`
+- [x] Build succeeds: `npm run build`
 - [ ] Manual check: buscar, paginar y abrir un producto desde el celular
 
 **Dependencies:** Task 3
