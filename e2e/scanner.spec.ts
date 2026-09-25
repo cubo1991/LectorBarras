@@ -60,3 +60,45 @@ test("con dos códigos en cuadro se lee sólo el de adentro del marco", async ({
   });
   await expect(page.getByText(outside)).toHaveCount(0);
 });
+
+test("un Code 128 alfanumérico se lee y se da de alta de punta a punta", async ({ cameraPage }) => {
+  const page = await cameraPage("code128");
+  const { code128 } = readCodes();
+  await registerAndLogin(page);
+
+  await page.goto("/scan");
+  await expect(page.getByText(`No existe un producto con el código ${code128}`)).toBeVisible({
+    timeout: READ_TIMEOUT,
+  });
+
+  await page.getByPlaceholder("Nombre del producto").fill("[E2E] code128 por cámara");
+  await page.getByPlaceholder("Stock inicial").fill("4");
+  await page.getByRole("button", { name: "Dar de alta" }).click();
+  await expect(page.getByText("Stock actual: 4")).toBeVisible();
+  await expect(page.getByText(`Código: ${code128}`)).toBeVisible();
+});
+
+test("un EAN-13 con el dígito verificador inválido nunca se lee", async ({ cameraPage }) => {
+  const page = await cameraPage("badChecksum");
+  const { badChecksum } = readCodes();
+  await registerAndLogin(page);
+
+  await page.goto("/scan");
+
+  await expect(page.getByText("Iniciando cámara…")).toBeHidden({ timeout: READ_TIMEOUT });
+  await page.waitForTimeout(4_000);
+  await expect(page.getByText(/No existe un producto|Stock actual/)).toHaveCount(0);
+  await expect(page.getByText(badChecksum)).toHaveCount(0);
+});
+
+test("un QR (etiqueta propia) cuadrado cabe en el marco y se lee", async ({ cameraPage }) => {
+  const page = await cameraPage("qr");
+  const { qr } = readCodes();
+  await registerAndLogin(page);
+
+  await page.goto("/scan");
+
+  await expect(page.getByText(`No existe un producto con el código ${qr}`)).toBeVisible({
+    timeout: READ_TIMEOUT,
+  });
+});

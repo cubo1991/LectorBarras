@@ -1,4 +1,4 @@
-import { Code128Reader } from "@zxing/library";
+import { BarcodeFormat, Code128Reader, MultiFormatWriter } from "@zxing/library";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { gs1CheckDigit } from "../../src/lib/barcode";
@@ -23,8 +23,8 @@ const BAR = 16; // negro en rango de video (Y)
 export const FIXTURE_DIR = path.resolve(process.cwd(), "e2e", ".fixtures");
 const CODES_FILE = path.join(FIXTURE_DIR, "codes.json");
 
-export type FixtureCodes = { inside: string; outside: string; code128: string };
-export type FixtureName = "inside" | "outside" | "outsideCentered" | "two" | "code128";
+export type FixtureCodes = { inside: string; outside: string; code128: string; badChecksum: string; qr: string };
+export type FixtureName = "inside" | "outside" | "outsideCentered" | "two" | "code128" | "badChecksum" | "qr";
 
 // ---- Codificadores (módulos: true = barra) -------------------------------------------
 
@@ -72,10 +72,21 @@ function code128Bits(text: string): boolean[] {
 // ---- Video --------------------------------------------------------------------------
 
 type Placement = { bits: boolean[]; x: number; y: number; moduleWidth: number; height: number };
+/** QR (2D): la única simbología que @zxing/library sabe escribir. */
+type QrPlacement = { qr: string; x: number; y: number; size: number };
 
-function frame(placements: Placement[]): Buffer {
+function frame(placements: (Placement | QrPlacement)[]): Buffer {
   const y = Buffer.alloc(W * H, BACKGROUND);
   for (const p of placements) {
+    if ("qr" in p) {
+      const matrix = new MultiFormatWriter().encode(p.qr, BarcodeFormat.QR_CODE, p.size, p.size, new Map());
+      for (let row = 0; row < matrix.getHeight(); row++) {
+        for (let col = 0; col < matrix.getWidth(); col++) {
+          if (matrix.get(col, row)) y[(p.y + row) * W + p.x + col] = BAR;
+        }
+      }
+      continue;
+    }
     p.bits.forEach((isBar, i) => {
       if (!isBar) return;
       for (let row = 0; row < p.height; row++) {
@@ -88,7 +99,7 @@ function frame(placements: Placement[]): Buffer {
   return Buffer.concat([Buffer.from("FRAME\n"), y, chroma, chroma]);
 }
 
-function writeY4m(name: FixtureName, placements: Placement[]) {
+function writeY4m(name: FixtureName, placements: (Placement | QrPlacement)[]) {
   const header = Buffer.from(`YUV4MPEG2 W${W} H${H} F30:1 Ip A1:1 C420jpeg\n`);
   const one = frame(placements);
   writeFileSync(path.join(FIXTURE_DIR, `${name}.y4m`), Buffer.concat([header, ...Array(FRAMES).fill(one)]));
@@ -106,8 +117,13 @@ export function generateFixtures(): FixtureCodes {
   const codes: FixtureCodes = {
     inside: randomEan13(),
     outside: randomEan13(),
+    qr: `QR-${Math.floor(Math.random() * 1e6).toString().padStart(6, "0")}`,
+    // EAN-13 bien formado pero con el dígito verificador adulterado: nunca debe leerse.
+    badChecksum: "",
     code128: `LB${Math.floor(Math.random() * 1e6).toString().padStart(6, "0")}`,
   };
+
+  codes.badChecksum = `${codes.inside.slice(0, 12)}${(Number(codes.inside[12]) + 1) % 10}`;
 
   const centered = (bits: boolean[], moduleWidth: number, height: number): Placement => ({
     bits,
@@ -128,6 +144,9 @@ export function generateFixtures(): FixtureCodes {
   writeY4m("outsideCentered", [centered(ean13Bits(codes.outside), 3, 100)]);
   writeY4m("two", [inside, outside]);
   writeY4m("code128", [code128]);
+  // QR cuadrado de 360 px, centrado: cabe en el alto del marco (396 px), que es lo que lo hace tolerante.
+  writeY4m("qr", [{ qr: codes.qr, x: (W - 360) / 2, y: (H - 360) / 2, size: 360 }]);
+  writeY4m("badChecksum", [centered(ean13Bits(codes.badChecksum), 5, 200)]);
   writeFileSync(CODES_FILE, JSON.stringify(codes));
   return codes;
 }

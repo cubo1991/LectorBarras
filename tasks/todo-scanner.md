@@ -157,21 +157,23 @@ Spec: `SPEC-scanner.md` · Plan y decisiones: `tasks/plan-scanner.md`
 
 ## Phase 3: Precisión y formatos
 
-### Task 6: Confirmación de 3 lecturas, formatos universales y normalización en la lectura
+### Task 6: Confirmación de 3 lecturas, formatos universales y normalización en la lectura ✅
+
+> Hecho; 77 unit y 33 e2e en verde (cuentas reales; la nota de la Task 5 decía 31 por error, eran 30). `acceptReading` (en `barcode.ts`) filtra cada lectura: formato conocido, dígito verificador, ITF sólo como GTIN-14 válido (los ITF de otro largo dan demasiadas lecturas falsas), y 4–64 ASCII; después la confirma el `createConfirmer` (3 iguales en 1,5 s) y se resetea al confirmar. E2E por cámara: EAN-13, **Code 128 alfanumérico de punta a punta (alta incluida)**, **QR cuadrado** (cabe en el marco de 396 px de alto), y un EAN-13 con dígito verificador adulterado que **nunca** se lee. UPC-A/UPC-E/ITF-14/Code 39 se cubren en unit (`acceptReading`), no por cámara.
 
 **Description:** Conectar `createConfirmer` al bucle: un código se acepta sólo tras 3 lecturas iguales. Activar los formatos universales (EAN-13, EAN-8, UPC-A, UPC-E, Code 128, Code 39, ITF, QR) en zxing y hacer que cada lectura devuelva `{text, format}`. Filtrar cada lectura: largo mínimo, dígito verificador para los formatos GS1, y normalizar con `barcode.ts` antes de confirmar y de llamar a `onDetected`.
 
 **Acceptance criteria:**
-- [ ] Una lectura suelta (o dos) no dispara `onDetected`; la tercera igual sí
-- [ ] Un EAN/UPC con checksum inválido se descarta y nunca llega a `onDetected`
-- [ ] Un Code 128 alfanumérico se lee de punta a punta: se da de alta y se vuelve a encontrar
-- [ ] Un UPC-A leído llega como GTIN-13 (mismo producto que su EAN-13)
-- [ ] Lecturas de un código y luego de otro distinto no se mezclan en la confirmación
+- [x] Una lectura suelta (o dos) no dispara `onDetected`; la tercera igual sí
+- [x] Un EAN/UPC con checksum inválido se descarta y nunca llega a `onDetected`
+- [x] Un Code 128 alfanumérico se lee de punta a punta: se da de alta y se vuelve a encontrar
+- [x] Un UPC-A leído llega como GTIN-13 (mismo producto que su EAN-13)
+- [x] Lecturas de un código y luego de otro distinto no se mezclan en la confirmación
 
 **Verification:**
-- [ ] Tests pass: `npm test` (filtro de lectura: checksum, largo mínimo, normalización)
-- [ ] E2E: `npx playwright test e2e/scanner.spec.ts` (Code 128 de punta a punta, dentro/fuera/dos siguen en verde)
-- [ ] E2E: `npm run test:e2e` completo
+- [x] Tests pass: `npm test` (filtro de lectura: checksum, largo mínimo, normalización)
+- [x] E2E: `npx playwright test e2e/scanner.spec.ts` (Code 128 de punta a punta, dentro/fuera/dos siguen en verde)
+- [x] E2E: `npm run test:e2e` completo
 
 **Dependencies:** Tasks 1, 4, 5
 

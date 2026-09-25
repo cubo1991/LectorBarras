@@ -2,10 +2,18 @@ import { BrowserMultiFormatReader } from "@zxing/browser";
 import { BarcodeFormat, DecodeHintType } from "@zxing/library";
 
 const hints = new Map();
+// Universal para comercio chico: góndola (EAN/UPC), etiquetas propias (Code 128/39),
+// cajas (ITF) y QR. Más formatos = más lecturas falsas; se compensa con `acceptReading`
+// (dígito verificador, largo) y con la confirmación de varias lecturas iguales.
 hints.set(DecodeHintType.POSSIBLE_FORMATS, [
   BarcodeFormat.EAN_13,
-  BarcodeFormat.UPC_A,
   BarcodeFormat.EAN_8,
+  BarcodeFormat.UPC_A,
+  BarcodeFormat.UPC_E,
+  BarcodeFormat.CODE_128,
+  BarcodeFormat.CODE_39,
+  BarcodeFormat.ITF,
+  BarcodeFormat.QR_CODE,
 ]);
 // Más lento por frame, pero las webcams de notebook (foco fijo, mucho ruido) fallan sin esto.
 hints.set(DecodeHintType.TRY_HARDER, true);

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  acceptReading,
   barcodeCandidates,
   expandUpcE,
   gs1CheckDigit,
@@ -128,5 +129,37 @@ describe("isValidBarcodeInput", () => {
     for (const bad of ["", "   ", "abc", "x".repeat(65), "AB\nCD", "código", "ABÇ-1"]) {
       expect(isValidBarcodeInput(bad), JSON.stringify(bad)).toBe(false);
     }
+  });
+});
+
+describe("acceptReading", () => {
+  it("acepta lecturas válidas y las normaliza", () => {
+    expect(acceptReading(EAN13, "EAN_13")).toBe(EAN13);
+    expect(acceptReading(UPC_A, "UPC_A")).toBe(`0${UPC_A}`);
+    expect(acceptReading(UPC_E, "UPC_E")).toBe(`0${UPC_E_EXPANDED}`);
+    expect(acceptReading("ABC-1234", "CODE_128")).toBe("ABC-1234");
+    expect(acceptReading("LB123456", "CODE_39")).toBe("LB123456");
+  });
+
+  it("descarta un dígito verificador inválido", () => {
+    expect(acceptReading("4006381333932", "EAN_13")).toBeNull();
+    expect(acceptReading("036000291453", "UPC_A")).toBeNull();
+  });
+
+  it("descarta un formato desconocido", () => {
+    expect(acceptReading(EAN13, undefined)).toBeNull();
+  });
+
+  it("ITF sólo se acepta como GTIN-14 válido", () => {
+    const body = "1001234567890";
+    const itf14 = `${body}${gs1CheckDigit(body)}`;
+    expect(acceptReading(itf14, "ITF")).toBe(itf14);
+    expect(acceptReading("123456", "ITF")).toBeNull();
+    expect(acceptReading(`${body}${(gs1CheckDigit(body) + 1) % 10}`, "ITF")).toBeNull();
+  });
+
+  it("descarta los alfanuméricos muy cortos o muy largos", () => {
+    expect(acceptReading("AB1", "CODE_39")).toBeNull();
+    expect(acceptReading("x".repeat(65), "QR_CODE")).toBeNull();
   });
 });

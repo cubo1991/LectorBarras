@@ -4,13 +4,16 @@ import { useEffect, useRef, useState } from "react";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
-import { isValidBarcodeInput, normalizeBarcode } from "@/lib/barcode";
+import { acceptReading, isValidBarcodeInput, normalizeBarcode } from "@/lib/barcode";
 import { scanFeedback, setMuted, unlockAudio, useMuted } from "@/lib/feedback";
+import { createConfirmer } from "@/lib/scan-confirm";
 import { createZxingDecoder } from "@/lib/scan-decoder";
 import { startScanLoop } from "@/lib/scan-loop";
 import {
   CAMERA_CONSTRAINTS,
   cameraErrorMessage,
+  CONFIRM_READS,
+  CONFIRM_WINDOW_MS,
   GUIDE,
   insecureContextError,
   isCameraAvailable,
@@ -31,8 +34,6 @@ export function BarcodeScanner({ onDetected }: Props) {
   // visor queda negro y mudo, indistinguible de una falla.
   const [ready, setReady] = useState(false);
   const muted = useMuted();
-  // El bucle entrega el mismo código en cada vuelta: el feedback suena una vez por detección.
-  const lastFeedbackAt = useRef(0);
   const [manualCode, setManualCode] = useState("");
   const [manualError, setManualError] = useState<string | null>(null);
 
@@ -54,16 +55,21 @@ export function BarcodeScanner({ onDetected }: Props) {
       await video.play();
       if (cancelled) return;
 
+      const confirmer = createConfirmer(CONFIRM_READS, CONFIRM_WINDOW_MS);
       stopLoop = startScanLoop({
         video,
         decode: createZxingDecoder(),
         onReading: (reading) => {
           setReadWarning(null);
-          if (Date.now() - lastFeedbackAt.current > 2000) {
-            lastFeedbackAt.current = Date.now();
-            scanFeedback();
-          }
-          onDetected(reading.text);
+          // Descarta lo que no pasa el filtro (formato, dígito verificador, largo)...
+          const code = acceptReading(reading.text, reading.format);
+          if (!code) return;
+          // ...y sólo acepta un código tras varias lecturas iguales seguidas.
+          const confirmed = confirmer.push(code, Date.now());
+          if (!confirmed) return;
+          confirmer.reset();
+          scanFeedback();
+          onDetected(confirmed);
         },
         // Un frame sin código es lo normal (el decodificador lo devuelve como null);
         // llegar acá es un fallo real de lectura.

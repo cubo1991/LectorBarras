@@ -110,3 +110,21 @@ export function barcodeCandidates(raw: string, format?: BarcodeFormatName): stri
 export function isValidBarcodeInput(raw: string): boolean {
   return /^[\x20-\x7E]{4,64}$/.test(raw.trim());
 }
+
+/**
+ * Filtro de una lectura de cámara. Devuelve el código listo para confirmar (ya
+ * normalizado) o `null` si hay que descartarla. Es más estricto que el ingreso manual
+ * porque acá se conoce el formato:
+ *  - formato desconocido → descartar;
+ *  - dígito verificador inválido (EAN/UPC/ITF-14) → descartar;
+ *  - ITF sólo si es un GTIN-14 válido: los ITF de otro largo no traen verificador y
+ *    producen demasiadas lecturas falsas con el texto de los envases;
+ *  - el resto (Code 128/39, QR) debe cumplir la regla del ingreso manual (4–64 ASCII).
+ */
+export function acceptReading(text: string, format: BarcodeFormatName | undefined): string | null {
+  if (!format) return null;
+  if (format === "ITF" && !/^\d{14}$/.test(text)) return null;
+  if (!hasValidCheckDigit(text, format)) return null;
+  if (!isValidBarcodeInput(text)) return null;
+  return normalizeBarcode(text, format);
+}
