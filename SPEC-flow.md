@@ -77,16 +77,22 @@ Lógica de decisión en funciones puras testeadas sin cámara; los componentes s
 
 ```ts
 // src/lib/scan-rearm.ts
-export function createRearm(absentMs: number) {
+export function createRearm(absentMs: number, minMisses: number) {
   let counted: string | null = null;
   let lastSeenAt = 0;
+  let misses = 0;
   return {
     /** Con CADA lectura válida: si el código ya contado volvió tras una ausencia larga, se re-arma. */
     observe(code: string, now: number) {
-      if (code !== counted) return;
-      if (now - lastSeenAt >= absentMs) counted = null;
-      lastSeenAt = now;
+      if (code === counted) {
+        // "Salió" = pasó absentMs Y hubo minMisses vueltas vacías (un celular lento no cuenta doble).
+        if (now - lastSeenAt >= absentMs && misses >= minMisses) counted = null;
+        lastSeenAt = now;
+      }
+      misses = 0;
     },
+    /** Cada vuelta del bucle que no encontró ningún código. */
+    miss() { misses += 1; },
     /** ¿Esta confirmación es una presentación nueva? Un código ya contado a la vista: no. */
     shouldCount(code: string): boolean {
       if (code === counted) return false;

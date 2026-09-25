@@ -65,21 +65,23 @@ Spec: `SPEC-flow.md` · Plan y decisiones: `tasks/plan-flow.md`
 
 ## Phase 2: La pantalla persistente
 
-### Task 3: Cámara viva + ficha bajo el visor + fixture "pulso"
+### Task 3: Cámara viva + ficha bajo el visor + fixture "pulso" ✅
+
+> Hecho; 119 unit y 41 e2e en verde. `ProductPanel` extrae la ficha/alta; el visor ya no se desmonta y no existe `Escanear otro código`. E2E de punta a punta con el video 'pulso': con el código quieto 5 s hay **1** búsqueda y **1** `getUserMedia` (la cámara no se reinicia); al salir y volver se busca de nuevo y nunca más de una por presentación. **Tres hallazgos al probarlo:** (1) la regla anti-duplicado con sólo tiempo contaba dos veces en el e2e (decodificaciones lentas superaban los 700 ms con el código quieto): ahora exige además ≥ 3 vueltas vacías seguidas (`REARM_MIN_MISSES`), lo que también protege a los celulares lentos; (2) al quedar el código a la vista, cada lectura pisaba el estado 'confirmado' con 'leyendo' a los 100 ms: ahora el marco queda verde mientras el código siga leyéndose; (3) se eliminó la guarda `lookingUp` y el enfriamiento de 3 s de la página (ya no hacen falta) y se reemplazaron por un número de búsqueda para que sólo la última pinte.
 
 **Description:** El visor deja de desmontarse: la ficha (o el formulario "no cargado") aparece **debajo** y escanear otro producto la reemplaza. Se quita el botón "Escanear otro código". `BarcodeScanner` aplica la regla anti-duplicado (T2) antes de avisar a la página, así recibe un evento por presentación del código. Se agrega el fixture de video "pulso" (código a la vista 2 s / vacío 2 s, 5 fps) y se valida de punta a punta contando las búsquedas.
 
 **Acceptance criteria:**
-- [ ] Tras un escaneo, el visor **no** vuelve a "Iniciando cámara…" y la ficha aparece bajo el visor
-- [ ] Con el código fijo a la vista durante 4 s se hace **una** búsqueda (no una cada 0,3 s)
-- [ ] Sacar el código del marco y volver a mostrarlo hace una **segunda** búsqueda
-- [ ] Ya no existe "Escanear otro código"; el ingreso manual y `?code=` (desde `/products`) siguen funcionando
-- [ ] Un producto no cargado muestra el formulario de alta bajo el visor y, al cargarlo, la ficha lo reemplaza sin apagar la cámara
+- [x] Tras un escaneo, el visor **no** vuelve a "Iniciando cámara…" y la ficha aparece bajo el visor
+- [x] Con el código fijo a la vista durante 4 s se hace **una** búsqueda (no una cada 0,3 s)
+- [x] Sacar el código del marco y volver a mostrarlo hace una **segunda** búsqueda
+- [x] Ya no existe "Escanear otro código"; el ingreso manual y `?code=` (desde `/products`) siguen funcionando
+- [x] Un producto no cargado muestra el formulario de alta bajo el visor y, al cargarlo, la ficha lo reemplaza sin apagar la cámara
 
 **Verification:**
-- [ ] Tests pass: `npm test`
-- [ ] E2E: `npx playwright test e2e/scanner.spec.ts` (fixture "pulso": 1 búsqueda con el código fijo, 2 al volver; cámara no se reinicia) y `npm run test:e2e` completo
-- [ ] Build succeeds: `npm run build`
+- [x] Tests pass: `npm test`
+- [x] E2E: `npx playwright test e2e/scanner.spec.ts` (fixture "pulso": 1 búsqueda con el código fijo, 2 al volver; cámara no se reinicia) y `npm run test:e2e` completo
+- [x] Build succeeds: `npm run build`
 
 **Dependencies:** Task 2
 

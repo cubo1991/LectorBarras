@@ -24,7 +24,7 @@ export const FIXTURE_DIR = path.resolve(process.cwd(), "e2e", ".fixtures");
 const CODES_FILE = path.join(FIXTURE_DIR, "codes.json");
 
 export type FixtureCodes = { inside: string; outside: string; code128: string; badChecksum: string; qr: string };
-export type FixtureName = "inside" | "outside" | "outsideCentered" | "two" | "code128" | "badChecksum" | "qr";
+export type FixtureName = "inside" | "outside" | "outsideCentered" | "two" | "code128" | "badChecksum" | "qr" | "pulse";
 
 // ---- Codificadores (módulos: true = barra) -------------------------------------------
 
@@ -99,10 +99,17 @@ function frame(placements: (Placement | QrPlacement)[]): Buffer {
   return Buffer.concat([Buffer.from("FRAME\n"), y, chroma, chroma]);
 }
 
-function writeY4m(name: FixtureName, placements: (Placement | QrPlacement)[]) {
-  const header = Buffer.from(`YUV4MPEG2 W${W} H${H} F30:1 Ip A1:1 C420jpeg\n`);
-  const one = frame(placements);
-  writeFileSync(path.join(FIXTURE_DIR, `${name}.y4m`), Buffer.concat([header, ...Array(FRAMES).fill(one)]));
+type Scene = (Placement | QrPlacement)[];
+
+/** Video de `frames` cuadros a `fps` cuadros por segundo; Chromium lo repite en bucle. */
+function writeY4mFrames(name: FixtureName, frames: Scene[], fps: number) {
+  const header = Buffer.from(`YUV4MPEG2 W${W} H${H} F${fps}:1 Ip A1:1 C420jpeg\n`);
+  writeFileSync(path.join(FIXTURE_DIR, `${name}.y4m`), Buffer.concat([header, ...frames.map(frame)]));
+}
+
+/** Escena fija: el mismo cuadro repetido. */
+function writeY4m(name: FixtureName, placements: Scene) {
+  writeY4mFrames(name, Array<Scene>(FRAMES).fill(placements), 30);
 }
 
 /** Un EAN-13 válido (dígito verificador correcto) con cuerpo aleatorio. */
@@ -139,6 +146,10 @@ export function generateFixtures(): FixtureCodes {
 
   writeY4m("inside", [inside]);
   writeY4m("outside", [outside]);
+  // "Pulso": el código está a la vista 2 s y se retira 2 s, en bucle (a 5 cuadros por segundo
+  // para que el archivo no pese decenas de MB de más). Simula una unidad que se muestra, se
+  // retira y se muestra la siguiente: la base de la prueba de "sale del marco y vuelve".
+  writeY4mFrames("pulse", [...Array<Scene>(10).fill([inside]), ...Array<Scene>(10).fill([])], 5);
   // Control positivo: el MISMO código chico de "outside", pero centrado. Si éste se lee y
   // "outside" no, el motivo es el marco y no que el código fuera ilegible.
   writeY4m("outsideCentered", [centered(ean13Bits(codes.outside), 3, 100)]);

@@ -48,6 +48,8 @@ export const SCAN_INTERVAL_MS = 100;
  * sin contar dos veces. Valor de partida: se ajusta con el uso real en el Android.
  */
 export const REARM_ABSENT_MS = 700;
+/** ...y además tienen que haber fallado al menos estas vueltas seguidas (protege a los celulares lentos). */
+export const REARM_MIN_MISSES = 3;
 
 /** Sin ninguna lectura válida: a los 8 s la pista pasa a una acción concreta, a los 20 s al ingreso manual. */
 export const HELP_FIRST_MS = 8000;

@@ -3,11 +3,8 @@
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
-import { NewProductForm } from "@/components/NewProductForm";
+import { ProductPanel } from "@/components/ProductPanel";
 import { Alert } from "@/components/ui/Alert";
-import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
 import { lookupProductByBarcode, type ProductLookupResult } from "@/lib/actions/products";
 import { adjustStock } from "@/lib/actions/stock";
 
@@ -16,27 +13,25 @@ function ScanPageContent() {
   const [loading, setLoading] = useState(false);
   const [adjustError, setAdjustError] = useState<string | null>(null);
   const [lookupError, setLookupError] = useState<string | null>(null);
-  // El scanner dispara onDetected en cada frame con el código a la vista: mientras
-  // hay una búsqueda en curso se ignoran las demás.
-  const lookingUp = useRef(false);
+  // Cada búsqueda lleva un número: si otra empezó mientras tanto, sólo la última pinta.
+  const latestLookup = useRef(0);
 
+  // El visor avisa una vez por presentación del código (ya filtrado, confirmado y sin
+  // repetirse mientras sigue a la vista), así que acá no hace falta ninguna guarda.
   const handleDetected = useCallback(async (barcode: string) => {
-    if (lookingUp.current) return;
-    lookingUp.current = true;
+    const mine = ++latestLookup.current;
     setLoading(true);
     setAdjustError(null);
     setLookupError(null);
-    let failed = false;
     try {
-      setResult(await lookupProductByBarcode(barcode));
+      const lookup = await lookupProductByBarcode(barcode);
+      if (mine === latestLookup.current) setResult(lookup);
     } catch {
-      failed = true;
-      setLookupError("No se pudo buscar el producto. Volvé a iniciar sesión e intentá de nuevo.");
+      if (mine === latestLookup.current) {
+        setLookupError("No se pudo buscar el producto. Volvé a iniciar sesión e intentá de nuevo.");
+      }
     } finally {
-      setLoading(false);
-      // Tras un error el scanner sigue disparando frames: pausa para no martillar el server.
-      if (failed) setTimeout(() => (lookingUp.current = false), 3000);
-      else lookingUp.current = false;
+      if (mine === latestLookup.current) setLoading(false);
     }
   }, []);
 
@@ -53,11 +48,6 @@ function ScanPageContent() {
     handleDetected(codeFromUrl);
   }, [codeFromUrl, handleDetected]);
 
-  function handleReset() {
-    setResult(null);
-    setAdjustError(null);
-  }
-
   async function handleAdjust(productId: string, delta: number) {
     setAdjustError(null);
     const outcome = await adjustStock({ productId, delta });
@@ -72,53 +62,20 @@ function ScanPageContent() {
     <main className="mx-auto flex max-w-md flex-col gap-6 p-4 sm:p-8">
       <h1 className="text-2xl font-semibold">Escanear producto</h1>
 
-      {!result && <BarcodeScanner onDetected={handleDetected} />}
+      {/* La cámara queda siempre viva: escanear otro producto reemplaza la ficha de abajo. */}
+      <BarcodeScanner onDetected={handleDetected} />
 
       {loading && <p role="status">Buscando...</p>}
       {lookupError && <Alert>{lookupError}</Alert>}
 
-      {!loading && result?.found && (
-        <Card className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1">
-            <div className="flex items-start justify-between gap-2">
-              <p className="text-lg font-semibold">{result.product.name}</p>
-              {result.product.stock === 0 && <Badge tone="danger">Sin stock</Badge>}
-            </div>
-            <p className="text-sm text-muted">Código: {result.product.barcode}</p>
-          </div>
-          <p className="text-sm text-muted">
-            Stock actual: <span className="text-3xl font-semibold text-foreground">{result.product.stock}</span>
-          </p>
-          <div className="flex gap-3">
-            <Button
-              variant="secondary"
-              onClick={() => handleAdjust(result.product.id, -1)}
-              className="min-h-14 flex-1 text-2xl"
-            >
-              -1
-            </Button>
-            <Button onClick={() => handleAdjust(result.product.id, 1)} className="min-h-14 flex-1 text-2xl">
-              +1
-            </Button>
-          </div>
-          {adjustError && <Alert>{adjustError}</Alert>}
-        </Card>
-      )}
-
-      {!loading && result && !result.found && (
-        <div className="flex flex-col gap-3">
-          <p>No existe un producto con el código {result.barcode}.</p>
-          <NewProductForm
-            barcode={result.barcode}
-            onCreated={(product) => setResult({ found: true, product })}
-          />
-        </div>
-      )}
-
-      {!loading && result && (
-        <Button variant="secondary" onClick={handleReset}>
-          Escanear otro código
-        </Button>
+      {result && (
+        <ProductPanel
+          result={result}
+          loading={loading}
+          adjustError={adjustError}
+          onAdjust={handleAdjust}
+          onCreated={(product) => setResult({ found: true, product })}
+        />
       )}
     </main>
   );

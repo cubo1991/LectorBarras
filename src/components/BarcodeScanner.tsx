@@ -15,6 +15,7 @@ import {
   type CameraControls,
 } from "@/lib/scan-camera";
 import { createConfirmer } from "@/lib/scan-confirm";
+import { createRearm } from "@/lib/scan-rearm";
 import { createDecoder } from "@/lib/scan-decoder";
 import { startScanLoop } from "@/lib/scan-loop";
 import {
@@ -23,6 +24,8 @@ import {
   CONFIRM_READS,
   CONFIRM_WINDOW_MS,
   GUIDE,
+  REARM_ABSENT_MS,
+  REARM_MIN_MISSES,
   insecureContextError,
   isCameraAvailable,
 } from "@/lib/scanner";
@@ -79,10 +82,21 @@ export function BarcodeScanner({ onDetected }: Props) {
     let cancelled = false;
 
     // Muestra un estado del marco y lo devuelve a "buscando" si no llega otra lectura.
+    // Con la cámara viva el código sigue a la vista después de confirmarse: mientras siga
+    // leyéndose, el marco se queda en "confirmado" (verde) y no vuelve a "leyendo".
+    let confirmedNow = false;
     const showPhase = (next: "reading" | "confirmed", holdMs: number) => {
-      setPhase(next);
+      const shown = next === "reading" && confirmedNow ? "confirmed" : next;
+      confirmedNow = shown === "confirmed";
+      setPhase(shown);
       clearTimeout(phaseTimer.current);
-      phaseTimer.current = setTimeout(() => setPhase("searching"), holdMs);
+      phaseTimer.current = setTimeout(
+        () => {
+          confirmedNow = false;
+          setPhase("searching");
+        },
+        shown === "confirmed" ? CONFIRMED_HOLD_MS : holdMs,
+      );
     };
 
     const start = async () => {
@@ -109,6 +123,9 @@ export function BarcodeScanner({ onDetected }: Props) {
       if (cancelled) return;
 
       const confirmer = createConfirmer(CONFIRM_READS, CONFIRM_WINDOW_MS);
+      // La cámara sigue viva tras confirmar: el mismo código, quieto a la vista, no debe
+      // volver a avisar hasta que salga del marco o llegue otro distinto.
+      const rearm = createRearm(REARM_ABSENT_MS, REARM_MIN_MISSES);
       stopLoop = startScanLoop({
         video,
         decode,
@@ -118,14 +135,18 @@ export function BarcodeScanner({ onDetected }: Props) {
           const code = acceptReading(reading.text, reading.format);
           if (!code) return;
           showPhase("reading", READING_HOLD_MS);
+          rearm.observe(code, Date.now());
           // ...y sólo acepta un código tras varias lecturas iguales seguidas.
           const confirmed = confirmer.push(code, Date.now());
           if (!confirmed) return;
           confirmer.reset();
+          if (!rearm.shouldCount(confirmed)) return;
           showPhase("confirmed", CONFIRMED_HOLD_MS);
           scanFeedback();
           onDetected(confirmed);
         },
+        // Vuelta sin nada en el marco: cuenta para saber que el código salió.
+        onMiss: () => rearm.miss(),
         // Un frame sin código es lo normal (el decodificador lo devuelve como null);
         // llegar acá es un fallo real de lectura.
         onError: () => setReadWarning("Hubo un problema leyendo la cámara. Podés ingresar el código a mano."),

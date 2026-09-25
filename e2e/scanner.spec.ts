@@ -241,3 +241,60 @@ for (const colorScheme of ["light", "dark"] as const) {
     expect(overflow).toBeLessThanOrEqual(0);
   });
 }
+
+test("tras un escaneo la cámara sigue viva y el mismo código a la vista busca UNA sola vez", async ({
+  cameraPage,
+}) => {
+  const page = await cameraPage("inside");
+  const { inside } = readCodes();
+  let lookups = 0;
+  await page.route("**/scan", async (route) => {
+    if (route.request().method() === "POST") lookups++; // cada búsqueda es un POST (server action)
+    await route.continue();
+  });
+  await page.addInitScript(() => {
+    const w = window as unknown as { __cameraStarts: number };
+    w.__cameraStarts = 0;
+    const devices = navigator.mediaDevices;
+    const original = devices.getUserMedia.bind(devices);
+    devices.getUserMedia = (constraints) => {
+      w.__cameraStarts++;
+      return original(constraints);
+    };
+  });
+  await registerAndLogin(page);
+
+  await page.goto("/scan");
+  await expect(page.getByText(`No existe un producto con el código ${inside}`)).toBeVisible({
+    timeout: READ_TIMEOUT,
+  });
+
+  // El código sigue quieto frente a la cámara: durante 5 s (≈ 15 confirmaciones posibles) no
+  // debe volver a buscar ni reiniciar la cámara.
+  await page.waitForTimeout(5_000);
+  expect(lookups).toBe(1);
+  expect(await page.evaluate(() => (window as unknown as { __cameraStarts: number }).__cameraStarts)).toBe(1);
+  await expect(page.getByText("Iniciando cámara…")).toBeHidden();
+});
+
+test("si el código sale del marco y vuelve, se busca de nuevo: una vez por presentación", async ({
+  cameraPage,
+}) => {
+  const page = await cameraPage("pulse"); // 2 s a la vista, 2 s vacío, en bucle
+  let lookups = 0;
+  await page.route("**/scan", async (route) => {
+    if (route.request().method() === "POST") lookups++;
+    await route.continue();
+  });
+  await registerAndLogin(page);
+
+  const startedAt = Date.now();
+  await page.goto("/scan");
+
+  // Vuelve a mostrarse → segunda búsqueda.
+  await expect.poll(() => lookups, { timeout: 30_000 }).toBeGreaterThanOrEqual(2);
+
+  // Y no se buscó de más: como mucho una por presentación (una cada ~4 s) más la de margen.
+  const elapsedSeconds = (Date.now() - startedAt) / 1000;
+  expect(lookups).toBeLessThanOrEqual(Math.ceil(elapsedSeconds / 4) + 1);
+});

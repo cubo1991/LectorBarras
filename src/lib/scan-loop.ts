@@ -6,6 +6,8 @@ type Options = {
   video: HTMLVideoElement;
   decode: Decoder;
   onReading: (reading: Reading) => void;
+  /** Una vuelta que no encontró ningún código (lo normal mientras no hay nada en el marco). */
+  onMiss?: () => void;
   onError: (error: unknown) => void;
 };
 
@@ -15,7 +17,7 @@ type Options = {
  * decodificador. Las lecturas no se encolan: la siguiente se agenda cuando termina la
  * actual, así una decodificación lenta no acumula trabajo. Devuelve la función que lo detiene.
  */
-export function startScanLoop({ video, decode, onReading, onError }: Options): () => void {
+export function startScanLoop({ video, decode, onReading, onMiss, onError }: Options): () => void {
   const canvas = document.createElement("canvas");
   // Se lee el canvas en cada vuelta: este hint evita copiarlo a la GPU y de vuelta.
   const context = canvas.getContext("2d", { willReadFrequently: true });
@@ -36,7 +38,10 @@ export function startScanLoop({ video, decode, onReading, onError }: Options): (
           canvas.height = rect.height;
           context.drawImage(video, rect.x, rect.y, rect.width, rect.height, 0, 0, rect.width, rect.height);
           const reading = await decode(canvas);
-          if (reading && !stopped) onReading(reading);
+          if (!stopped) {
+            if (reading) onReading(reading);
+            else onMiss?.();
+          }
         }
       }
     } catch (error) {

@@ -34,7 +34,6 @@ test("el ajuste persiste al volver a buscar el código", async ({ page }) => {
   await page.getByRole("button", { name: "+1" }).click();
   await expect(page.getByText("Stock actual: 2")).toBeVisible();
 
-  await page.getByRole("button", { name: "Escanear otro código" }).click();
   await page.getByPlaceholder("Ingresar código manualmente").fill(barcode);
   await page.getByRole("button", { name: "Buscar" }).click();
 
@@ -47,7 +46,6 @@ test("un código ya existente no se puede dar de alta dos veces", async ({ page 
   const barcode = await createProduct(page, { name: "Duplicado", stock: 3 });
 
   // Volver a buscarlo debe mostrar la ficha, no el formulario de alta.
-  await page.getByRole("button", { name: "Escanear otro código" }).click();
   await page.getByPlaceholder("Ingresar código manualmente").fill(barcode);
   await page.getByRole("button", { name: "Buscar" }).click();
 
