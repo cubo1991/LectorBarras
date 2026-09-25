@@ -124,7 +124,7 @@ Ver decisiones de arquitectura y riesgos en `tasks/plan.md`.
 **Verification:**
 - [x] Tests pass: `npm test` (lógica de parseo/validación del código, sin depender de cámara real)
 - [x] Build succeeds: `npm run build`
-- [ ] Manual check: escanear un código de barras real desde el celular y desde una notebook con webcam — **pendiente, necesita browser real**
+- [x] Manual check: escaneo real en celular (producción, HTTPS) — funciona. Falta confirmar con webcam de notebook
 
 **Dependencies:** Task 1
 
@@ -268,11 +268,11 @@ Ver decisiones de arquitectura y riesgos en `tasks/plan.md`.
 
 **Acceptance criteria:**
 - [x] Si se deniega el permiso de cámara, se muestra un mensaje claro y el input manual sigue funcionando
-- [ ] El flujo de escaneo se probó en un celular real (Chrome Android o Safari iOS) — **pendiente, necesita celular + HTTPS**
+- [x] El flujo de escaneo se probó en un celular real contra https://lectorbarras.vercel.app — funciona (tras corregir el bug de errores por frame minificados)
 - [x] La UI es usable en pantallas chicas (sin scroll horizontal, botones alcanzables) — padding `p-4 sm:p-8`, botones con `min-h-11` (mínimo táctil), `+1`/`-1` a ancho completo, form del código con `flex-wrap` y `min-w-0` para que no desborde
 
 **Verification:**
-- [ ] Manual check: probar en un celular real con la app desplegada (Vercel preview) o en HTTPS local — **pendiente**
+- [x] Manual check: probado en celular real con la app desplegada en Vercel
 - [ ] Manual check: denegar el permiso de cámara a propósito y confirmar que no rompe la página — **pendiente** (cubierto por unit tests sobre el mapeo de errores, pero no probado en un browser real)
 
 **Dependencies:** Task 4, Task 8
