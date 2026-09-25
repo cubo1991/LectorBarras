@@ -11,14 +11,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
       <header className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-border bg-background px-4 sm:px-8">
-        <Link href="/" className="flex min-h-11 items-center font-semibold">
+        <Link href="/scan" className="flex min-h-11 items-center font-semibold">
           LectorBarras
         </Link>
         <nav
           aria-label="Principal"
           className="fixed inset-x-0 bottom-0 flex border-t border-border bg-background sm:static sm:border-t-0"
         >
-          <NavLink href="/">Inicio</NavLink>
           <NavLink href="/scan">Escanear</NavLink>
           <NavLink href="/products">Productos</NavLink>
         </nav>

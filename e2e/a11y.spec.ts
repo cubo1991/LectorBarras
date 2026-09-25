@@ -32,7 +32,7 @@ for (const colorScheme of ["light", "dark"] as const) {
     test("pantallas autenticadas: home, /scan, /products, ficha y alta", async ({ page }) => {
       await registerAndLogin(page);
 
-      for (const path of ["/", "/scan", "/products"]) {
+      for (const path of ["/scan", "/products"]) {
         await page.goto(path);
         await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
         await expectNoViolations(page, path);

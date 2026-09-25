@@ -41,7 +41,7 @@ export async function login(page: Page, email: string, password: string) {
   await page.getByPlaceholder("Contraseña").fill(password);
   await page.getByRole("button", { name: "Entrar" }).click();
 
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/scan");
 }
 
 export async function registerAndLogin(page: Page) {

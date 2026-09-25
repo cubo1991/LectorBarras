@@ -55,7 +55,7 @@ export async function loginAction(
     await signIn("credentials", {
       email: formData.get("email"),
       password: formData.get("password"),
-      redirectTo: "/",
+      redirectTo: "/scan",
     });
   } catch (error) {
     // signIn señaliza el redirect exitoso lanzando. Sólo las credenciales malas son

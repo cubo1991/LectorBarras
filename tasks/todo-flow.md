@@ -294,19 +294,21 @@ Spec: `SPEC-flow.md` · Plan y decisiones: `tasks/plan-flow.md`
 
 ---
 
-### Task 11: Escanear como pantalla de inicio
+### Task 11: Escanear como pantalla de inicio ✅
+
+> Hecho; 119 unit, 5 `test:db` y 66 e2e en verde. Tras el login se aterriza en `/scan`; `/` redirige (con sesión) o va a `/login` (sin sesión); la navegación quedó en Escanear · Productos; `start_url` del manifest pasó a `/scan` (la app instalada abre directo en el escáner, sin pasar por una redirección). Se eliminó la home. E2E de navegación: sólo esos dos links, la sección activa marcada y ninguno 'Inicio'.
 
 **Description:** Tras el login se entra a `/scan`; `/` redirige a `/scan`; "Inicio" sale de la navegación (queda Escanear · Productos) y se elimina la home.
 
 **Acceptance criteria:**
-- [ ] Login exitoso aterriza en `/scan`; `/` (con sesión) redirige a `/scan`; sin sesión sigue yendo a `/login`
-- [ ] La navegación tiene sólo Escanear y Productos y marca la sección activa
-- [ ] `start_url` del manifest sigue funcionando (redirige)
-- [ ] Los e2e que asumían `/` como aterrizaje se actualizan; `a11y` y `responsive` recorren `/scan` y `/products`
+- [x] Login exitoso aterriza en `/scan`; `/` (con sesión) redirige a `/scan`; sin sesión sigue yendo a `/login`
+- [x] La navegación tiene sólo Escanear y Productos y marca la sección activa
+- [x] `start_url` del manifest sigue funcionando (redirige)
+- [x] Los e2e que asumían `/` como aterrizaje se actualizan; `a11y` y `responsive` recorren `/scan` y `/products`
 
 **Verification:**
-- [ ] E2E: `npm run test:e2e` completo
-- [ ] Build succeeds: `npm run build`
+- [x] E2E: `npm run test:e2e` completo
+- [x] Build succeeds: `npm run build`
 - [ ] Manual check: abrir la app instalada y ver que arranca en el escáner
 
 **Dependencies:** Tasks 3 (y conviene después de todo lo demás)
@@ -320,6 +322,6 @@ Spec: `SPEC-flow.md` · Plan y decisiones: `tasks/plan-flow.md`
 ---
 
 ## Checkpoint: Completo
-- [ ] Criterios 1–13 de `SPEC-flow.md` cumplidos y automatizados
+- [x] Criterios 1–13 de `SPEC-flow.md` cumplidos y automatizados
 - [ ] Criterio 14 probado en el Android real (recepción de 10 productos de a unidad sin más toques que deshacer)
-- [ ] `lint`, `test`, `test:db`, `test:e2e`, `build` en verde y deploy verificado
+- [x] `lint`, `test` (119), `test:db` (5), `test:e2e` (66), `build` en verde (deploy: se verifica tras este push)

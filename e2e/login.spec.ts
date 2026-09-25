@@ -4,8 +4,8 @@ import { login, register, registerAndLogin } from "./helpers";
 test("un usuario nuevo se registra y se loguea", async ({ page }) => {
   await registerAndLogin(page);
 
-  // Estar en "/" sin ser pateado a /login es la prueba de que hay sesión.
-  await expect(page).toHaveURL("/");
+  // Aterrizar en el escáner sin ser pateado a /login es la prueba de que hay sesión.
+  await expect(page).toHaveURL("/scan");
 });
 
 test("rechaza una contraseña incorrecta", async ({ page }) => {
@@ -39,7 +39,7 @@ test("cierra sesión desde la app y vuelve a entrar", async ({ page }) => {
   await expect(page).toHaveURL(/\/login/);
 
   await login(page, email, password);
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/scan");
 });
 
 test("la contraseña no viaja en la URL si el form se envía sin hidratar", async ({ page }) => {

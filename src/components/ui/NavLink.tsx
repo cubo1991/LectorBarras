@@ -5,10 +5,10 @@ import { usePathname } from "next/navigation";
 
 type NavLinkProps = { href: string; children: React.ReactNode };
 
-/** Link de navegación que marca la sección activa. Inicio (`/`) sólo coincide exacto. */
+/** Link de navegación que marca la sección activa (la ruta exacta o cualquiera de sus subrutas). */
 export function NavLink({ href, children }: NavLinkProps) {
   const pathname = usePathname();
-  const active = href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
+  const active = pathname === href || pathname.startsWith(`${href}/`);
 
   return (
     <Link

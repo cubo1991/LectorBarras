@@ -39,7 +39,7 @@ test("pantallas públicas: /login y /register", async ({ page }) => {
 test("pantallas autenticadas: home, /scan y /products", async ({ page }) => {
   await registerAndLogin(page);
 
-  for (const path of ["/", "/scan", "/products"]) {
+  for (const path of ["/scan", "/products"]) {
     await page.goto(path);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await check(page);

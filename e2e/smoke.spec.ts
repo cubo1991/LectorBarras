@@ -7,19 +7,25 @@ test("sin sesión, la home redirige a /login", async ({ page }) => {
   await expect(page).toHaveTitle("LectorBarras");
 });
 
-test("con sesión, la home ofrece escanear y buscar, y no es el template de Next", async ({ page }) => {
-  const { email } = await registerAndLogin(page);
+test("con sesión, el login aterriza en el escáner y `/` lleva ahí", async ({ page }) => {
+  await registerAndLogin(page); // aterriza en /scan (lo verifica el helper)
+  await expect(page.getByRole("heading", { name: "Escanear producto" })).toBeVisible();
 
-  await expect(page.getByRole("heading", { name: "Inicio" })).toBeVisible();
-  await expect(page.getByText(email)).toBeVisible();
-  await expect(page.getByText(/To get started, edit the/)).toHaveCount(0);
-
-  await page.getByRole("link", { name: /Escanear producto/ }).click();
+  await page.goto("/");
   await expect(page).toHaveURL(/\/scan$/);
+});
 
-  await page.getByRole("navigation", { name: "Principal" }).getByRole("link", { name: "Productos" }).click();
+test("la navegación tiene sólo Escanear y Productos y marca la sección activa", async ({ page }) => {
+  await registerAndLogin(page);
+  const nav = page.getByRole("navigation", { name: "Principal" });
+
+  await expect(nav.getByRole("link")).toHaveText(["Escanear", "Productos"]); // sin "Inicio"
+  await expect(nav.getByRole("link", { name: "Escanear" })).toHaveAttribute("aria-current", "page");
+
+  await nav.getByRole("link", { name: "Productos" }).click();
   await expect(page).toHaveURL(/\/products$/);
-  await expect(page.getByRole("link", { name: "Productos" })).toHaveAttribute("aria-current", "page");
+  await expect(nav.getByRole("link", { name: "Productos" })).toHaveAttribute("aria-current", "page");
+  await expect(nav.getByRole("link", { name: "Escanear" })).not.toHaveAttribute("aria-current", "page");
 });
 
 test("el manifest y los íconos son públicos (sin sesión) y válidos para instalar", async ({ request }) => {
@@ -27,7 +33,7 @@ test("el manifest y los íconos son públicos (sin sesión) y válidos para inst
   expect(response.status()).toBe(200);
 
   const manifest = await response.json();
-  expect(manifest).toMatchObject({ name: "LectorBarras", display: "standalone", start_url: "/" });
+  expect(manifest).toMatchObject({ name: "LectorBarras", display: "standalone", start_url: "/scan" });
 
   // Chrome exige un ícono de 192 y otro de 512 para ofrecer "instalar".
   const sizes = manifest.icons.map((icon: { sizes: string }) => icon.sizes);

@@ -8,7 +8,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "LectorBarras",
     short_name: "LectorBarras",
     description: "Inventario por código de barras: escaneá un producto y ajustá su stock.",
-    start_url: "/",
+    start_url: "/scan", // la app instalada abre directo en el escáner
     display: "standalone",
     lang: "es",
     background_color: "#ffffff",
