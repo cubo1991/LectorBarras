@@ -17,7 +17,7 @@ Hoy la app funciona pero se ve a medio hacer: `/` es todavía el template de cre
 2. Shell de navegación (encabezado + acceso a Escanear / Productos / Salir) y **home real** en `/`.
 3. Rediseño de `/login`, `/register`, `/scan`, `/products` y sus estados (vacío, cargando, error, éxito).
 4. **Modo oscuro real**, consistente en todas las pantallas.
-5. **Feedback al escanear**: vibración y/o sonido al detectar un código, con opción de silenciar.
+5. **Feedback al escanear**: sonido al confirmar un código, con opción de silenciar. *(Actualizado: la vibración se descartó; ver `SPEC-scanner.md`.)*
 6. **Accesibilidad WCAG 2.1 AA**, verificada automáticamente en e2e.
 7. **Instalable como PWA** (ícono en pantalla de inicio, arranque standalone).
 
@@ -124,7 +124,7 @@ Los tests visuales (screenshots) quedan fuera: su mantenimiento no compensa para
 3. En 360×740 ninguna pantalla tiene scroll horizontal y todo control interactivo mide ≥ 44×44 px.
 4. Axe no reporta violaciones WCAG 2.1 AA en `/login`, `/register`, `/`, `/scan`, `/products` en modo claro **y** oscuro. Todo input tiene `<label>` asociado.
 5. El modo oscuro sigue `prefers-color-scheme` y ninguna pantalla queda con texto ilegible o fondos claros residuales.
-6. Al detectar un código el celular vibra y/o suena; existe un control visible para silenciar y la preferencia persiste. Sin soporte del navegador, el escaneo funciona igual.
+6. Al confirmar un código suena un aviso (no vibra); existe un control visible para silenciar y la preferencia persiste. Sin soporte de audio, el escaneo funciona igual. *(Ver `SPEC-scanner.md`.)*
 7. La app pasa el chequeo de instalabilidad de Chrome (manifest válido, íconos 192/512 + maskable) y abre en modo standalone tras "Agregar a inicio" en un celular real.
 8. Los 15 e2e existentes siguen en verde; `npm run build` y `npm run lint` sin errores.
 9. Verificado manualmente en un celular real: flujo escanear → ajustar stock con la app instalada.
