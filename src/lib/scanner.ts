@@ -20,8 +20,13 @@ export function isValidManualBarcode(value: string): boolean {
 const TRANSIENT_DECODE_ERRORS = ["NotFoundException", "ChecksumException", "FormatException"];
 
 export function isTransientDecodeError(error: unknown): boolean {
-  const name = errorName(error);
-  return name !== "" && TRANSIENT_DECODE_ERRORS.includes(name);
+  // `name` sale de constructor.name (ts-custom-error), que el minificador de
+  // producción renombra ("t", "e"...). `kind` es una propiedad estática, no se toca.
+  const kind =
+    typeof (error as { getKind?: unknown } | null)?.getKind === "function"
+      ? String((error as { getKind: () => unknown }).getKind())
+      : "";
+  return [kind, errorName(error)].some((n) => TRANSIENT_DECODE_ERRORS.includes(n));
 }
 
 /** `getUserMedia` sólo existe en contextos seguros: HTTPS o localhost. */

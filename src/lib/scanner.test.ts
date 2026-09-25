@@ -1,3 +1,4 @@
+import { ChecksumException, FormatException, NotFoundException } from "@zxing/library";
 import { describe, expect, it } from "vitest";
 import {
   cameraErrorMessage,
@@ -34,6 +35,14 @@ describe("isTransientDecodeError", () => {
   it("trata los errores por frame como transitorios", () => {
     for (const name of ["NotFoundException", "ChecksumException", "FormatException"]) {
       expect(isTransientDecodeError({ name })).toBe(true);
+    }
+  });
+
+  it("reconoce los errores reales de zxing aunque el minificador les cambie el name", () => {
+    for (const E of [NotFoundException, ChecksumException, FormatException]) {
+      const error = new E();
+      Object.defineProperty(error, "name", { value: "t" }); // lo que queda en el bundle de producción
+      expect(isTransientDecodeError(error)).toBe(true);
     }
   });
 
