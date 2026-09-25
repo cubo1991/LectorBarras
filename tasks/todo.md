@@ -338,3 +338,12 @@ Producción en https://lectorbarras.vercel.app (proyecto `lectorbarras`, repo co
 
 ### ~~Fuera del plan, pero bloquea el deploy~~ — descartado, no aplica
 Se sospechaba que `src/proxy.ts` (que importa `auth` → `postgres` + `bcryptjs`) fallaría en Vercel por correr en Edge. **Falso en Next 16:** `proxy` corre siempre en runtime Node.js y no es configurable (`node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/proxy.md:255`, `.../upgrading/version-16.md:616`). Sólo el `middleware.ts` viejo podía ser Edge. No hace falta partir la config de Auth.js; el deploy no está bloqueado por esto.
+
+### Code review final — hallazgos corregidos
+- `searchProducts` y `lookupProductByBarcode` sin `auth()` (las server actions son invocables por HTTP sin pasar por el proxy) → ahora exigen sesión.
+- `/products?page=abc|0|-1|1.5` daba 500 → cae a la página 1.
+- `loginAction` disfrazaba cualquier `AuthError` de "contraseña incorrecta" → sólo `CredentialsSignin`; el resto se relanza.
+- `%` y `_` en la búsqueda actuaban como comodines → `escapeLike` (`src/lib/sql.ts`).
+- `/scan?code=A` → `?code=B` no buscaba B (ref booleano) → se compara con el último código.
+- `createProduct` ante alta simultánea del mismo código tiraba error genérico → se captura `23505` (`isUniqueViolation`).
+- Scanner: `onDetected` disparaba una búsqueda por frame → guard de búsqueda en curso, con pausa de 3 s tras un error.

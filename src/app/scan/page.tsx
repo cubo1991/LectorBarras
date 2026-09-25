@@ -13,23 +13,41 @@ function ScanPageContent() {
   const [result, setResult] = useState<ProductLookupResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [adjustError, setAdjustError] = useState<string | null>(null);
+  const [lookupError, setLookupError] = useState<string | null>(null);
+  // El scanner dispara onDetected en cada frame con el código a la vista: mientras
+  // hay una búsqueda en curso se ignoran las demás.
+  const lookingUp = useRef(false);
 
   const handleDetected = useCallback(async (barcode: string) => {
+    if (lookingUp.current) return;
+    lookingUp.current = true;
     setLoading(true);
     setAdjustError(null);
-    const lookup = await lookupProductByBarcode(barcode);
-    setResult(lookup);
-    setLoading(false);
+    setLookupError(null);
+    let failed = false;
+    try {
+      setResult(await lookupProductByBarcode(barcode));
+    } catch {
+      failed = true;
+      setLookupError("No se pudo buscar el producto. Volvé a iniciar sesión e intentá de nuevo.");
+    } finally {
+      setLoading(false);
+      // Tras un error el scanner sigue disparando frames: pausa para no martillar el server.
+      if (failed) setTimeout(() => (lookingUp.current = false), 3000);
+      else lookingUp.current = false;
+    }
   }, []);
 
   // Entrada desde el listado de productos (/products): ?code=<barcode> abre
   // directamente la ficha, sin pasar por la cámara.
   const codeFromUrl = useSearchParams().get("code");
-  const alreadyLookedUp = useRef(false);
+  const lastCodeFromUrl = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!codeFromUrl || alreadyLookedUp.current) return;
-    alreadyLookedUp.current = true;
+    // Se compara con el último código atendido (no un booleano): si la URL pasa
+    // de ?code=A a ?code=B hay que buscar B.
+    if (!codeFromUrl || lastCodeFromUrl.current === codeFromUrl) return;
+    lastCodeFromUrl.current = codeFromUrl;
     handleDetected(codeFromUrl);
   }, [codeFromUrl, handleDetected]);
 
@@ -55,6 +73,11 @@ function ScanPageContent() {
       {!result && <BarcodeScanner onDetected={handleDetected} />}
 
       {loading && <p>Buscando...</p>}
+      {lookupError && (
+        <p role="alert" className="text-sm text-red-600">
+          {lookupError}
+        </p>
+      )}
 
       {!loading && result?.found && (
         <div className="flex flex-col gap-3 border p-4">

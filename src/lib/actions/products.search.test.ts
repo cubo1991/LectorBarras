@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// next-auth no resuelve bajo vitest (importa "next/server"); searchProducts no
-// usa la sesión, pero products.ts la importa a nivel de módulo.
-vi.mock("@/lib/auth", () => ({ auth: async () => null }));
+// next-auth no resuelve bajo vitest (importa "next/server"): se mockea la sesión.
+const session = vi.hoisted(() => ({ value: { user: { id: "user-1" } } as unknown }));
+vi.mock("@/lib/auth", () => ({ auth: async () => session.value }));
 
 const rows = vi.hoisted(() => ({ value: [] as unknown[] }));
 const count = vi.hoisted(() => ({ value: 0 }));
@@ -51,6 +51,7 @@ const product = (over: Partial<{ id: string; barcode: string; name: string; stoc
 
 describe("searchProducts", () => {
   beforeEach(() => {
+    session.value = { user: { id: "user-1" } };
     rows.value = [];
     count.value = 0;
     captured.limit = 0;
@@ -102,5 +103,18 @@ describe("searchProducts", () => {
 
     expect(result.page).toBe(2);
     expect(captured.offset).toBe(PRODUCTS_PAGE_SIZE);
+  });
+
+  it("una página inválida en la URL cae a la 1 en vez de tirar", async () => {
+    for (const page of ["abc", "0", "-1", "1.5"]) {
+      const result = await searchProducts({ query: "", page });
+      expect(result.page).toBe(1);
+    }
+  });
+
+  it("rechaza a quien no tiene sesión", async () => {
+    session.value = null;
+
+    await expect(searchProducts({ query: "" })).rejects.toThrow("No autenticado");
   });
 });

@@ -58,8 +58,10 @@ export async function loginAction(
       redirectTo: "/",
     });
   } catch (error) {
-    // signIn señaliza el redirect exitoso lanzando: sólo tragamos AuthError.
-    if (error instanceof AuthError) {
+    // signIn señaliza el redirect exitoso lanzando. Sólo las credenciales malas son
+    // "contraseña incorrecta"; una caída de la DB o una mala config (otros AuthError)
+    // no deben disfrazarse de eso: se relanzan.
+    if (error instanceof AuthError && error.type === "CredentialsSignin") {
       return { error: "Email o contraseña incorrectos" };
     }
     throw error;
