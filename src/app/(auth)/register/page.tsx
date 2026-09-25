@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
+import { PasswordField } from "@/components/ui/PasswordField";
 import { registerAction } from "@/lib/actions/auth";
 
 export default function RegisterPage() {
@@ -20,10 +21,9 @@ export default function RegisterPage() {
       </div>
       <form action={formAction} className="flex flex-col gap-4">
         <Field label="Email" name="email" type="email" placeholder="Email" autoComplete="email" required />
-        <Field
+        <PasswordField
           label="Contraseña"
           name="password"
-          type="password"
           placeholder="Contraseña (mín. 8 caracteres)"
           autoComplete="new-password"
           required

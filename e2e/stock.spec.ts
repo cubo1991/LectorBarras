@@ -184,3 +184,16 @@ test.describe("deshacer", () => {
     await expect(page.getByText("Stock actual: 2")).toBeVisible();
   });
 });
+
+test("si la búsqueda falla (sesión vencida o sin red), el aviso ofrece volver a iniciar sesión", async ({ page }) => {
+  await registerAndLogin(page);
+  await page.goto("/scan");
+  await page.route("**/scan", (route) => (route.request().method() === "POST" ? route.abort() : route.continue()));
+
+  await page.getByPlaceholder("Ingresar código manualmente").fill("7791234567890");
+  await page.getByRole("button", { name: "Buscar" }).click();
+
+  await expect(page.getByText("No pudimos buscar el producto.")).toBeVisible();
+  const link = page.getByRole("link", { name: "Volver a iniciar sesión" });
+  await expect(link).toHaveAttribute("href", "/login");
+});

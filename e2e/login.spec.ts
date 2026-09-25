@@ -55,3 +55,29 @@ test("la contraseña no viaja en la URL si el form se envía sin hidratar", asyn
   await expect(page).not.toHaveURL(/password=/);
   expect(page.url()).not.toContain("secreto-que-no-debe-filtrarse");
 });
+
+test.describe("mostrar contraseña", () => {
+  for (const path of ["/login", "/register"]) {
+    test(`${path}: alterna la visibilidad, con teclado, y no envía el formulario`, async ({ page }) => {
+      await page.goto(path);
+      const password = page.getByPlaceholder(/Contraseña/);
+      const toggle = page.getByRole("button", { name: "Mostrar contraseña" });
+
+      await password.fill("secreto-123");
+      await expect(password).toHaveAttribute("type", "password");
+      await expect(toggle).toHaveAttribute("aria-pressed", "false");
+
+      await toggle.click();
+      await expect(password).toHaveAttribute("type", "text");
+      await expect(toggle).toHaveAttribute("aria-pressed", "true");
+      await expect(password).toHaveValue("secreto-123"); // conserva lo escrito
+      await expect(page).toHaveURL(new RegExp(`${path}$`)); // no envió el formulario
+
+      await toggle.focus();
+      await page.keyboard.press("Space"); // se opera con teclado
+      await expect(password).toHaveAttribute("type", "password");
+      await expect(toggle).toHaveAttribute("aria-pressed", "false");
+      expect((await toggle.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    });
+  }
+});

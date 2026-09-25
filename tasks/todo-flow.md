@@ -243,17 +243,19 @@ Spec: `SPEC-flow.md` · Plan y decisiones: `tasks/plan-flow.md`
 
 ## Phase 4: Pulido y estructura
 
-### Task 9: "Mostrar contraseña" y link de sesión vencida
+### Task 9: "Mostrar contraseña" y link de sesión vencida ✅
+
+> Hecho; 119 unit y 65 e2e en verde. `PasswordField` con botón `Mostrar contraseña` (etiqueta fija, `aria-pressed`, `type=button` para no enviar el form; sin JavaScript el campo sigue siendo un password por POST). **El chequeo de 44 px de `responsive.spec` lo atrapó:** el botón medía 40 px dentro del campo de 44; ahora ocupa todo el alto. El aviso de búsqueda fallida ahora es 'No pudimos buscar el producto.' + link 'Volver a iniciar sesión' (e2e aborta el POST para simularlo).
 
 **Description:** Botón "Mostrar contraseña" (toggle accesible) en login y registro. El aviso de sesión vencida de `/scan` incluye un link a `/login`.
 
 **Acceptance criteria:**
-- [ ] "Mostrar contraseña" alterna el tipo del campo (`password` ↔ `text`), tiene nombre accesible y estado (`aria-pressed`), se opera con teclado y mide ≥ 44 px
-- [ ] El campo sigue enviándose por POST sin hidratar (el e2e de "la contraseña no viaja en la URL" sigue verde)
-- [ ] El aviso de sesión vencida contiene un link a `/login`
+- [x] "Mostrar contraseña" alterna el tipo del campo (`password` ↔ `text`), tiene nombre accesible y estado (`aria-pressed`), se opera con teclado y mide ≥ 44 px
+- [x] El campo sigue enviándose por POST sin hidratar (el e2e de "la contraseña no viaja en la URL" sigue verde)
+- [x] El aviso de sesión vencida contiene un link a `/login`
 
 **Verification:**
-- [ ] E2E: `npm run test:e2e` (login, registro, a11y y responsive incluidos)
+- [x] E2E: `npm run test:e2e` (login, registro, a11y y responsive incluidos)
 
 **Dependencies:** None
 

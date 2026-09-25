@@ -4,6 +4,7 @@ import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { ProductPanel } from "@/components/ProductPanel";
+import Link from "next/link";
 import { Alert } from "@/components/ui/Alert";
 import { Switch } from "@/components/ui/Switch";
 import { Toast } from "@/components/ui/Toast";
@@ -59,7 +60,7 @@ function ScanPageContent() {
       if (mine === latestLookup.current) setResult(lookup);
     } catch {
       if (mine === latestLookup.current) {
-        setLookupError("No se pudo buscar el producto. Volvé a iniciar sesión e intentá de nuevo.");
+        setLookupError("No pudimos buscar el producto.");
       }
     } finally {
       if (mine === latestLookup.current) setLoading(false);
@@ -105,7 +106,7 @@ function ScanPageContent() {
         if (mine === latestLookup.current) setResult({ found: true, product });
       } catch {
         if (mine === latestLookup.current) {
-          setLookupError("No se pudo buscar el producto. Volvé a iniciar sesión e intentá de nuevo.");
+          setLookupError("No pudimos buscar el producto.");
         }
       } finally {
         if (mine === latestLookup.current) setLoading(false);
@@ -185,7 +186,14 @@ function ScanPageContent() {
       </div>
 
       {loading && <p role="status">Buscando...</p>}
-      {lookupError && <Alert>{lookupError}</Alert>}
+      {lookupError && (
+        <Alert>
+          {lookupError}{" "}
+          <Link href="/login" className="font-medium underline">
+            Volver a iniciar sesión
+          </Link>
+        </Alert>
+      )}
 
       {notice && (
         <Toast
