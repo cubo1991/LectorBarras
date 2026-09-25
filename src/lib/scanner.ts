@@ -24,10 +24,6 @@ export function createBarcodeReader() {
   return new BrowserMultiFormatReader(hints);
 }
 
-export function isValidManualBarcode(value: string): boolean {
-  return /^\d{8,14}$/.test(value.trim());
-}
-
 /**
  * Excepciones que zxing dispara en cada frame que no contiene un código legible.
  * No son fallas de cámara: si se tratan como tales, un frame borroso apaga el

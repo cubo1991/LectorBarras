@@ -25,3 +25,17 @@ describe("createProduct validation", () => {
     expect(result).toEqual({ ok: false, error: "El stock inicial no puede ser negativo" });
   });
 });
+
+describe("createProduct: código de barras", () => {
+  it("rechaza un código de menos de 4 caracteres", async () => {
+    const result = await createProduct({ barcode: "abc", name: "Producto", stock: 0 });
+
+    expect(result).toEqual({ ok: false, error: expect.stringMatching(/4 y 64/) });
+  });
+
+  it("rechaza un código de más de 64 caracteres", async () => {
+    const result = await createProduct({ barcode: "x".repeat(65), name: "Producto", stock: 0 });
+
+    expect(result).toEqual({ ok: false, error: expect.stringMatching(/4 y 64/) });
+  });
+});

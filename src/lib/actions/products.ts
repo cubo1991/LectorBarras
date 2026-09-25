@@ -1,10 +1,11 @@
 "use server";
 
 import { z } from "zod";
-import { asc, eq, ilike, or, sql } from "drizzle-orm";
+import { asc, ilike, inArray, or, sql } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
 import { products, stockMovements } from "@/lib/db/schema";
+import { barcodeCandidates, isValidBarcodeInput, normalizeBarcode } from "@/lib/barcode";
 import { PRODUCTS_PAGE_SIZE } from "@/lib/pagination";
 import { escapeLike, isUniqueViolation } from "@/lib/sql";
 
@@ -24,8 +25,12 @@ async function requireUserId(): Promise<string> {
 
 export async function lookupProductByBarcode(barcode: string): Promise<ProductLookupResult> {
   await requireUserId();
-  const [product] = await db.select().from(products).where(eq(products.barcode, barcode)).limit(1);
-  if (!product) return { found: false, barcode };
+  // El código canónico primero y, si aplica, su variante de 12 dígitos: los productos
+  // cargados antes de normalizar siguen encontrándose.
+  const candidates = barcodeCandidates(barcode);
+  const rows = await db.select().from(products).where(inArray(products.barcode, candidates));
+  const product = candidates.map((c) => rows.find((r) => r.barcode === c)).find(Boolean);
+  if (!product) return { found: false, barcode: candidates[0] };
   return { found: true, product };
 }
 
@@ -51,7 +56,7 @@ export async function searchProducts(input: unknown): Promise<SearchProductsResu
   const { query, page } = searchProductsSchema.parse(input ?? {});
 
   const where = query
-    ? or(eq(products.barcode, query), ilike(products.name, `%${escapeLike(query)}%`))
+    ? or(inArray(products.barcode, barcodeCandidates(query)), ilike(products.name, `%${escapeLike(query)}%`))
     : undefined;
 
   const [{ count }] = await db
@@ -76,7 +81,9 @@ export async function searchProducts(input: unknown): Promise<SearchProductsResu
 }
 
 const createProductSchema = z.object({
-  barcode: z.string().regex(/^\d{8,14}$/, "El código debe ser numérico, de 8 a 14 dígitos"),
+  barcode: z
+    .string()
+    .refine(isValidBarcodeInput, "El código debe tener entre 4 y 64 caracteres (letras, números o símbolos)"),
   name: z.string().trim().min(1, "El nombre es obligatorio"),
   stock: z.coerce.number().int().min(0, "El stock inicial no puede ser negativo"),
 });
@@ -91,7 +98,8 @@ export async function createProduct(input: unknown): Promise<CreateProductResult
     return { ok: false, error: parsed.error.issues[0].message };
   }
 
-  const { barcode, name, stock } = parsed.data;
+  const { name, stock } = parsed.data;
+  const barcode = normalizeBarcode(parsed.data.barcode);
 
   // La validación va antes de auth() a propósito: un input inválido se rechaza
   // sin consultar la sesión ni la DB.
@@ -108,7 +116,7 @@ export async function createProduct(input: unknown): Promise<CreateProductResult
       const [existing] = await tx
         .select()
         .from(products)
-        .where(eq(products.barcode, barcode))
+        .where(inArray(products.barcode, barcodeCandidates(barcode)))
         .limit(1);
       if (existing) return duplicate;
 

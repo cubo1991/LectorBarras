@@ -51,7 +51,7 @@ export default async function ProductsPage({ searchParams }: Props) {
             {products.map((product) => (
               <li key={product.id}>
                 <Link
-                  href={`/scan?code=${product.barcode}`}
+                  href={`/scan?code=${encodeURIComponent(product.barcode)}`}
                   className="flex min-h-11 flex-col gap-1 rounded-control border border-border bg-surface p-4"
                 >
                   <span className="flex items-start justify-between gap-2">

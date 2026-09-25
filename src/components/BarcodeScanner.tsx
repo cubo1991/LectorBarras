@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
+import { isValidBarcodeInput, normalizeBarcode } from "@/lib/barcode";
 import { scanFeedback, setMuted, unlockAudio, useMuted } from "@/lib/feedback";
 import {
   CAMERA_CONSTRAINTS,
@@ -12,7 +13,6 @@ import {
   insecureContextError,
   isCameraAvailable,
   isTransientDecodeError,
-  isValidManualBarcode,
 } from "@/lib/scanner";
 
 type Props = {
@@ -87,12 +87,12 @@ export function BarcodeScanner({ onDetected }: Props) {
 
   function handleManualSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!isValidManualBarcode(manualCode)) {
-      setManualError("Ingresá un código numérico de 8 a 14 dígitos");
+    if (!isValidBarcodeInput(manualCode)) {
+      setManualError("Ingresá un código de 4 a 64 caracteres (letras, números o símbolos)");
       return;
     }
     setManualError(null);
-    onDetected(manualCode.trim());
+    onDetected(normalizeBarcode(manualCode));
   }
 
   return (
@@ -137,7 +137,9 @@ export function BarcodeScanner({ onDetected }: Props) {
             label="Código de barras"
             type="text"
             name="manual-code"
-            inputMode="numeric"
+            autoCapitalize="off"
+            autoComplete="off"
+            spellCheck={false}
             placeholder="Ingresar código manualmente"
             value={manualCode}
             onChange={(e) => setManualCode(e.target.value)}

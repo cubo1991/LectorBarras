@@ -31,21 +31,23 @@ Spec: `SPEC-scanner.md` · Plan y decisiones: `tasks/plan-scanner.md`
 
 ---
 
-### Task 2: Backend e ingreso manual universales
+### Task 2: Backend e ingreso manual universales ✅
+
+> Hecho; 62 unit y 26 e2e en verde. Búsqueda exacta por código (`searchProducts`) también usa los candidatos, y los links de `/products` a `/scan?code=` ahora van con `encodeURIComponent` (un Code 128 con `&`, `#` o espacios los rompía). El caso 'producto viejo con 12 dígitos' se cubre en unit con la DB simulada (`products.lookup.test.ts`): no se puede crear uno viejo desde la UI porque ahora todo se normaliza.
 
 **Description:** Usar `barcode.ts` en `createProduct` (validar con la regla relajada, guardar el código normalizado), en `lookupProductByBarcode` (buscar por candidatos, devolver el código normalizado en `found:false`) y en el ingreso manual del escáner (validación y mensaje). Se mantiene el orden "validar antes de `auth()`".
 
 **Acceptance criteria:**
-- [ ] `createProduct` acepta un Code 128 alfanumérico (ej. `ABC-1234`) y lo guarda tal cual; sigue rechazando vacío, muy corto o muy largo
-- [ ] Guardar un UPC-A de 12 dígitos lo persiste como GTIN-13 (`0`+12); dar de alta después el EAN-13 equivalente informa "Ya existe un producto con ese código"
-- [ ] `lookupProductByBarcode` encuentra un producto guardado con 12 dígitos al buscarlo por su EAN-13 equivalente y viceversa
-- [ ] El ingreso manual acepta códigos alfanuméricos (`inputMode` de texto) y el mensaje de error refleja la regla nueva
-- [ ] Los 23 e2e existentes no cambian de comportamiento
+- [x] `createProduct` acepta un Code 128 alfanumérico (ej. `ABC-1234`) y lo guarda tal cual; sigue rechazando vacío, muy corto o muy largo
+- [x] Guardar un UPC-A de 12 dígitos lo persiste como GTIN-13 (`0`+12); dar de alta después el EAN-13 equivalente informa "Ya existe un producto con ese código"
+- [x] `lookupProductByBarcode` encuentra un producto guardado con 12 dígitos al buscarlo por su EAN-13 equivalente y viceversa
+- [x] El ingreso manual acepta códigos alfanuméricos (`inputMode` de texto) y el mensaje de error refleja la regla nueva
+- [x] Los 23 e2e existentes no cambian de comportamiento
 
 **Verification:**
-- [ ] Tests pass: `npm test` (validación de `createProduct`, candidatos)
-- [ ] E2E: `npm run test:e2e` completo + nuevo `e2e/barcodes.spec.ts` (alta manual de Code 128, y equivalencia 12↔13 dígitos)
-- [ ] Build succeeds: `npm run build`
+- [x] Tests pass: `npm test` (validación de `createProduct`, candidatos)
+- [x] E2E: `npm run test:e2e` completo + nuevo `e2e/barcodes.spec.ts` (alta manual de Code 128, y equivalencia 12↔13 dígitos)
+- [x] Build succeeds: `npm run build`
 
 **Dependencies:** Task 1
 
@@ -60,8 +62,8 @@ Spec: `SPEC-scanner.md` · Plan y decisiones: `tasks/plan-scanner.md`
 ---
 
 ## Checkpoint: Códigos
-- [ ] `test`, `lint`, `build`, `test:e2e` en verde
-- [ ] Code 128 alfanumérico se da de alta a mano y se encuentra; UPC-A y EAN-13 equivalentes son el mismo producto
+- [x] `test`, `lint`, `build`, `test:e2e` en verde
+- [x] Code 128 alfanumérico se da de alta a mano y se encuentra; UPC-A y EAN-13 equivalentes son el mismo producto
 
 ## Phase 2: Infraestructura de cámara y marco funcional
 

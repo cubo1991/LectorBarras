@@ -56,9 +56,8 @@ export async function registerAndLogin(page: Page) {
  */
 export async function createProduct(
   page: Page,
-  { name, stock }: { name: string; stock: number },
+  { name, stock, barcode = uniqueBarcode() }: { name: string; stock: number; barcode?: string },
 ): Promise<string> {
-  const barcode = uniqueBarcode();
 
   await page.goto("/scan");
   await page.getByPlaceholder("Ingresar código manualmente").fill(barcode);
