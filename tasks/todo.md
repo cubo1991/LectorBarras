@@ -333,5 +333,5 @@ Ver decisiones de arquitectura y riesgos en `tasks/plan.md`.
 - Task 9: probar el flujo en un celular real — necesita HTTPS, o sea un deploy (Vercel preview) o un túnel HTTPS local
 - Task 9: denegar el permiso de cámara a propósito y confirmar que la página no rompe
 
-### Fuera del plan, pero bloquea el deploy
-`src/proxy.ts` importa `auth` desde `@/lib/auth`, que arrastra el driver TCP `postgres` y `bcryptjs` al middleware. En dev (runtime Node) funciona; en Vercel el middleware corre en Edge y un driver TCP no. `plan.md` ya marcaba este riesgo como Alto y proponía `neon-http`, pero el código terminó con `postgres-js`. El arreglo estándar es partir la config de Auth.js: una `auth.config.ts` sin acceso a DB para el proxy, y la completa sólo en rutas Node. Hay que resolverlo **antes** de poder hacer el deploy que Task 9 necesita.
+### ~~Fuera del plan, pero bloquea el deploy~~ — descartado, no aplica
+Se sospechaba que `src/proxy.ts` (que importa `auth` → `postgres` + `bcryptjs`) fallaría en Vercel por correr en Edge. **Falso en Next 16:** `proxy` corre siempre en runtime Node.js y no es configurable (`node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/proxy.md:255`, `.../upgrading/version-16.md:616`). Sólo el `middleware.ts` viejo podía ser Edge. No hace falta partir la config de Auth.js; el deploy no está bloqueado por esto.
