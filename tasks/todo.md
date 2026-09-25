@@ -273,7 +273,7 @@ Ver decisiones de arquitectura y riesgos en `tasks/plan.md`.
 
 **Verification:**
 - [x] Manual check: probado en celular real con la app desplegada en Vercel
-- [ ] Manual check: denegar el permiso de cámara a propósito y confirmar que no rompe la página — **pendiente** (cubierto por unit tests sobre el mapeo de errores, pero no probado en un browser real)
+- [x] Manual check: permiso de cámara denegado a propósito en browser real — mensaje claro, ingreso manual funciona
 
 **Dependencies:** Task 4, Task 8
 
