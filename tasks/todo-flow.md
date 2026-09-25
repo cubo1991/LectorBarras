@@ -6,20 +6,22 @@ Spec: `SPEC-flow.md` · Plan y decisiones: `tasks/plan-flow.md`
 
 ## Phase 1: Integridad y reglas
 
-### Task 1: `adjustStock` atómico, tope de cantidad y test de concurrencia
+### Task 1: `adjustStock` atómico, tope de cantidad y test de concurrencia ✅
+
+> Hecho; 106 unit, 5 `test:db` y 39 e2e en verde. **La mutación confirmó el bug real:** con la implementación vieja, 20 ajustes +1 concurrentes sobre un stock de 5 terminaron en **7 en vez de 25** (se perdieron 18 de 20), y 12 restas concurrentes sobre un stock de 5 dejaron pasar las 12 (stock negativo). Con `UPDATE … SET stock = stock + delta WHERE … AND stock + delta >= 0` dan +20 exactos y sólo 5 de 12 restas. Ojo: mientras hice la mutación un `git checkout` pisó la versión nueva sin commitear; estaba respaldada y se restauró, pero conviene no revertir con git trabajo no commiteado.
 
 **Description:** Hoy `adjustStock` lee el stock y después lo escribe: dos ajustes simultáneos se pisan. Hacerlo atómico (`stock = stock + delta` con la condición de no quedar negativo en la misma sentencia + insert del movimiento en la misma transacción) y limitar el ajuste a ±9999. Agregar un proyecto de Vitest contra la base real (`test:db`) que demuestre la corrección.
 
 **Acceptance criteria:**
-- [ ] Un ajuste que dejaría stock negativo se rechaza con "No hay stock suficiente" y no cambia nada (ni stock ni movimientos)
-- [ ] `delta` 0, no entero, > 9999 o < -9999 se rechaza con un mensaje claro antes de tocar la base
-- [ ] 20 ajustes `+1` concurrentes sobre el mismo producto terminan exactamente en +20 y dejan 20 movimientos
-- [ ] Cada ajuste (incluido uno inverso) inserta su movimiento con usuario y delta
-- [ ] `npm test` (diario) **no** corre los tests de base; `npm run test:db` sí
+- [x] Un ajuste que dejaría stock negativo se rechaza con "No hay stock suficiente" y no cambia nada (ni stock ni movimientos)
+- [x] `delta` 0, no entero, > 9999 o < -9999 se rechaza con un mensaje claro antes de tocar la base
+- [x] 20 ajustes `+1` concurrentes sobre el mismo producto terminan exactamente en +20 y dejan 20 movimientos
+- [x] Cada ajuste (incluido uno inverso) inserta su movimiento con usuario y delta
+- [x] `npm test` (diario) **no** corre los tests de base; `npm run test:db` sí
 
 **Verification:**
-- [ ] Tests pass: `npm test` (validación de `delta` con la base simulada)
-- [ ] Tests pass: `npm run test:db` (concurrencia, negativo, movimientos; crea usuario/producto etiquetados y los limpia)
+- [x] Tests pass: `npm test` (validación de `delta` con la base simulada)
+- [x] Tests pass: `npm run test:db` (concurrencia, negativo, movimientos; crea usuario/producto etiquetados y los limpia)
 - [ ] Manual check: confirmar que el test **falla** con la implementación vieja (mutación), luego pasa con la nueva
 
 **Dependencies:** None
