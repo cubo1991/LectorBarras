@@ -122,21 +122,23 @@ Spec: `SPEC-scanner.md` · Plan y decisiones: `tasks/plan-scanner.md`
 
 ---
 
-### Task 5: Marco funcional — bucle de lectura sobre canvas (ROI)
+### Task 5: Marco funcional — bucle de lectura sobre canvas (ROI) ✅
+
+> Hecho; 72 unit y 31 e2e en verde. Bucle propio en `scan-loop.ts` (recorta el marco → canvas → decodificador, sin encolar) y motor zxing en `scan-decoder.ts`. El overlay del marco se dibuja desde la misma constante `GUIDE` que la zona decodificada. **Verificado con mutación:** con `GUIDE` a pantalla completa el test 'FUERA del marco' falla (lee el código de afuera); se revirtió. Se agregó un control positivo (`outsideCentered`: el mismo código chico de afuera pero centrado sí se lee), para que el negativo no pueda pasar por 'el código era ilegible'.
 
 **Description:** Reemplazar `decodeFromConstraints` por un bucle propio: cada ~100 ms (sin encolar lecturas), dibujar en un canvas sólo la región del marco y decodificarla con zxing (`decodeFromCanvas`). El marco de la pantalla pasa a ser tolerante (≈ 90 % × 55 %) y es exactamente la zona leída. Sin confirmación todavía (eso es la Task 6).
 
 **Acceptance criteria:**
-- [ ] Un código dentro del marco se lee y muestra el producto en ≤ 3 s
-- [ ] Un código fuera del marco **no** se lee (el escáner sigue esperando)
-- [ ] Con dos códigos en cuadro, uno dentro y otro fuera, se lee sólo el de adentro
-- [ ] Sin lecturas encoladas: si una decodificación tarda más que el intervalo, no se apilan
-- [ ] El ingreso manual y el fallo de cámara siguen igual
+- [x] Un código dentro del marco se lee y muestra el producto en ≤ 3 s
+- [x] Un código fuera del marco **no** se lee (el escáner sigue esperando)
+- [x] Con dos códigos en cuadro, uno dentro y otro fuera, se lee sólo el de adentro
+- [x] Sin lecturas encoladas: si una decodificación tarda más que el intervalo, no se apilan
+- [x] El ingreso manual y el fallo de cámara siguen igual
 
 **Verification:**
-- [ ] E2E: `npx playwright test e2e/scanner.spec.ts` (dentro / fuera / dos códigos)
-- [ ] E2E: `npm run test:e2e` completo
-- [ ] Build succeeds: `npm run build`
+- [x] E2E: `npx playwright test e2e/scanner.spec.ts` (dentro / fuera / dos códigos)
+- [x] E2E: `npm run test:e2e` completo
+- [x] Build succeeds: `npm run build`
 
 **Dependencies:** Tasks 3, 4
 
@@ -150,7 +152,7 @@ Spec: `SPEC-scanner.md` · Plan y decisiones: `tasks/plan-scanner.md`
 ---
 
 ## Checkpoint: Marco
-- [ ] e2e: dentro se lee, fuera no, con dos códigos sólo el de adentro
+- [x] e2e: dentro se lee, fuera no, con dos códigos sólo el de adentro
 - [ ] Revisión con el usuario
 
 ## Phase 3: Precisión y formatos

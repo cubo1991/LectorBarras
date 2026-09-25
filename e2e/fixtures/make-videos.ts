@@ -24,7 +24,7 @@ export const FIXTURE_DIR = path.resolve(process.cwd(), "e2e", ".fixtures");
 const CODES_FILE = path.join(FIXTURE_DIR, "codes.json");
 
 export type FixtureCodes = { inside: string; outside: string; code128: string };
-export type FixtureName = "inside" | "outside" | "two" | "code128";
+export type FixtureName = "inside" | "outside" | "outsideCentered" | "two" | "code128";
 
 // ---- Codificadores (módulos: true = barra) -------------------------------------------
 
@@ -123,6 +123,9 @@ export function generateFixtures(): FixtureCodes {
 
   writeY4m("inside", [inside]);
   writeY4m("outside", [outside]);
+  // Control positivo: el MISMO código chico de "outside", pero centrado. Si éste se lee y
+  // "outside" no, el motivo es el marco y no que el código fuera ilegible.
+  writeY4m("outsideCentered", [centered(ean13Bits(codes.outside), 3, 100)]);
   writeY4m("two", [inside, outside]);
   writeY4m("code128", [code128]);
   writeFileSync(CODES_FILE, JSON.stringify(codes));

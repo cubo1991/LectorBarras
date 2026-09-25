@@ -6,13 +6,14 @@ import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
 import { isValidBarcodeInput, normalizeBarcode } from "@/lib/barcode";
 import { scanFeedback, setMuted, unlockAudio, useMuted } from "@/lib/feedback";
+import { createZxingDecoder } from "@/lib/scan-decoder";
+import { startScanLoop } from "@/lib/scan-loop";
 import {
   CAMERA_CONSTRAINTS,
   cameraErrorMessage,
-  createBarcodeReader,
+  GUIDE,
   insecureContextError,
   isCameraAvailable,
-  isTransientDecodeError,
 } from "@/lib/scanner";
 
 type Props = {
@@ -23,21 +24,23 @@ export function BarcodeScanner({ onDetected }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   // Fatal: la cámara nunca arrancó o no está disponible → no mostramos el video.
   const [fatalError, setFatalError] = useState<string | null>(null);
-  // No fatal: la cámara anda pero un frame falló de forma no esperada → avisamos
-  // sin desmontar el video, porque desmontarlo deja al reader sin destino.
+  // No fatal: la cámara anda pero una lectura falló de forma no esperada → avisamos
+  // sin desmontar el video (desmontarlo cortaría el stream).
   const [readWarning, setReadWarning] = useState<string | null>(null);
   // El video puede tardar en arrancar (permiso, cámara lenta): sin este estado el
   // visor queda negro y mudo, indistinguible de una falla.
   const [ready, setReady] = useState(false);
   const muted = useMuted();
-  // zxing entrega el mismo código en cada frame: el feedback suena una vez por detección.
+  // El bucle entrega el mismo código en cada vuelta: el feedback suena una vez por detección.
   const lastFeedbackAt = useRef(0);
   const [manualCode, setManualCode] = useState("");
   const [manualError, setManualError] = useState<string | null>(null);
 
   useEffect(() => {
-    const reader = createBarcodeReader();
-    let controls: { stop: () => void } | undefined;
+    const video = videoRef.current;
+    if (!video) return;
+    let stream: MediaStream | undefined;
+    let stopLoop: (() => void) | undefined;
     let cancelled = false;
 
     const start = async () => {
@@ -45,43 +48,38 @@ export function BarcodeScanner({ onDetected }: Props) {
       // getUserMedia sale por el mismo .catch() que un permiso denegado.
       if (!isCameraAvailable()) throw insecureContextError();
 
-      return reader.decodeFromConstraints(
-        CAMERA_CONSTRAINTS,
-        videoRef.current ?? undefined,
-        (result, error) => {
-          if (result) {
-            setReadWarning(null);
-            if (Date.now() - lastFeedbackAt.current > 2000) {
-              lastFeedbackAt.current = Date.now();
-              scanFeedback();
-            }
-            onDetected(result.getText());
-            return;
+      stream = await navigator.mediaDevices.getUserMedia(CAMERA_CONSTRAINTS);
+      if (cancelled) return;
+      video.srcObject = stream;
+      await video.play();
+      if (cancelled) return;
+
+      stopLoop = startScanLoop({
+        video,
+        decode: createZxingDecoder(),
+        onReading: (reading) => {
+          setReadWarning(null);
+          if (Date.now() - lastFeedbackAt.current > 2000) {
+            lastFeedbackAt.current = Date.now();
+            scanFeedback();
           }
-          // Los errores por frame (sin código, checksum, formato) son lo normal
-          // mientras se apunta la cámara: se ignoran.
-          if (error && !isTransientDecodeError(error)) {
-            setReadWarning("Hubo un problema leyendo la cámara. Podés ingresar el código a mano.");
-          }
+          onDetected(reading.text);
         },
-      );
+        // Un frame sin código es lo normal (el decodificador lo devuelve como null);
+        // llegar acá es un fallo real de lectura.
+        onError: () => setReadWarning("Hubo un problema leyendo la cámara. Podés ingresar el código a mano."),
+      });
     };
 
-    start()
-      .then((c) => {
-        if (cancelled) {
-          c.stop();
-          return;
-        }
-        controls = c;
-      })
-      .catch((error: unknown) => {
-        setFatalError(cameraErrorMessage(error));
-      });
+    start().catch((error: unknown) => {
+      if (!cancelled) setFatalError(cameraErrorMessage(error));
+    });
 
     return () => {
       cancelled = true;
-      controls?.stop();
+      stopLoop?.();
+      stream?.getTracks().forEach((track) => track.stop());
+      video.srcObject = null;
     };
   }, [onDetected]);
 
@@ -110,7 +108,14 @@ export function BarcodeScanner({ onDetected }: Props) {
           {/* Marco de encuadre: orienta dónde poner el código. Decorativo. */}
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-x-[10%] inset-y-[25%] rounded-control border-2 border-white/80"
+            className="pointer-events-none absolute rounded-control border-2 border-white/80"
+            style={{
+              // Es exactamente la zona que se decodifica (GUIDE): lo de afuera se ignora.
+              left: `${((1 - GUIDE.widthFraction) / 2) * 100}%`,
+              right: `${((1 - GUIDE.widthFraction) / 2) * 100}%`,
+              top: `${((1 - GUIDE.heightFraction) / 2) * 100}%`,
+              bottom: `${((1 - GUIDE.heightFraction) / 2) * 100}%`,
+            }}
           />
           {!ready && (
             <p role="status" className="absolute inset-0 flex items-center justify-center text-sm text-white">
