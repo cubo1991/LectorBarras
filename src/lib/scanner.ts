@@ -20,6 +20,20 @@ export const CAMERA_CONSTRAINTS: MediaStreamConstraints = {
   },
 };
 
+/**
+ * Marco del visor, como fracción del área visible. Es generoso a propósito (pedido del
+ * usuario): admite un código de barras apaisado y un QR cuadrado sin exigir puntería.
+ * Es también la ÚNICA zona que se decodifica; lo de afuera se ignora.
+ */
+export const GUIDE = { widthFraction: 0.9, heightFraction: 0.55 };
+
+/** Un código se acepta tras esta cantidad de lecturas iguales seguidas... */
+export const CONFIRM_READS = 3;
+/** ...dentro de esta ventana. Con una lectura cada ~100 ms se confirma en ~0,3 s. */
+export const CONFIRM_WINDOW_MS = 1500;
+/** Pausa entre lecturas (zxing por defecto espera 500 ms; para confirmar rápido hace falta más ritmo). */
+export const SCAN_INTERVAL_MS = 100;
+
 export function createBarcodeReader() {
   return new BrowserMultiFormatReader(hints);
 }

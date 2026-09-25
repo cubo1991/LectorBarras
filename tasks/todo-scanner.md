@@ -97,17 +97,19 @@ Spec: `SPEC-scanner.md` · Plan y decisiones: `tasks/plan-scanner.md`
 
 ---
 
-### Task 4: `scan-confirm.ts` y `scan-geometry.ts` (lógica pura)
+### Task 4: `scan-confirm.ts` y `scan-geometry.ts` (lógica pura) ✅
+
+> Hecho; 72 unit en verde. Las constantes (`GUIDE`, `CONFIRM_READS`, `CONFIRM_WINDOW_MS`, `SCAN_INTERVAL_MS`) viven en `scanner.ts` con el porqué de cada valor. El primer caso de geometría (video y contenedor 16:9) da exactamente la zona que usan los videos de la cámara falsa (x 64–1216, y 162–558), así que el e2e de la Task 5 y estos tests hablan del mismo marco.
 
 **Description:** Dos módulos puros. `createConfirmer(needed=3, windowMs=1500)` acepta un código recién tras N lecturas iguales dentro de la ventana. `guideToVideoRect(...)` convierte el marco (en % del contenedor visible) al rectángulo en píxeles del video, compensando el recorte de `object-cover`.
 
 **Acceptance criteria:**
-- [ ] El confirmador rechaza 1 y 2 lecturas, acepta la 3.ª igual, se reinicia si cambia el código o vence la ventana
-- [ ] `guideToVideoRect` da el rectángulo correcto cuando el video es más ancho, más angosto o igual de proporción que el contenedor, y nunca sale de los límites del video
-- [ ] Constantes con nombre y comentario en `scanner.ts`: tamaño del marco (≈ 90 % × 55 %), lecturas necesarias, ventana, intervalo de lectura
+- [x] El confirmador rechaza 1 y 2 lecturas, acepta la 3.ª igual, se reinicia si cambia el código o vence la ventana
+- [x] `guideToVideoRect` da el rectángulo correcto cuando el video es más ancho, más angosto o igual de proporción que el contenedor, y nunca sale de los límites del video
+- [x] Constantes con nombre y comentario en `scanner.ts`: tamaño del marco (≈ 90 % × 55 %), lecturas necesarias, ventana, intervalo de lectura
 
 **Verification:**
-- [ ] Tests pass: `npm test -- src/lib/scan-confirm.test.ts src/lib/scan-geometry.test.ts`
+- [x] Tests pass: `npm test -- src/lib/scan-confirm.test.ts src/lib/scan-geometry.test.ts`
 
 **Dependencies:** None
 
