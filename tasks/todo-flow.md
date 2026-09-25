@@ -34,18 +34,20 @@ Spec: `SPEC-flow.md` · Plan y decisiones: `tasks/plan-flow.md`
 
 ---
 
-### Task 2: Reglas puras — anti-duplicado y ayuda contextual
+### Task 2: Reglas puras — anti-duplicado y ayuda contextual ✅
+
+> Hecho; 118 unit en verde. La API real de `scan-rearm` es `observe(code, now)` (con cada lectura válida) + `shouldCount(code)` (al confirmar): mi primer boceto de la spec marcaba 'visto' y 'contar' con el mismo reloj y **nunca habría re-armado**, porque cada lectura ya actualizaba la hora antes de preguntar; se detectó al pensar el caso y se corrigió antes de escribirlo (la spec quedó sincronizada). Casos probados: código quieto 10 s cuenta 1; 24 unidades una tras otra cuentan 24; ausencia corta (500 ms) no re-arma. Límite documentado: un código a la vista que no se lee durante 700 ms se toma como que salió; el valor es una constante ajustable.
 
 **Description:** Dos módulos puros y testeados. `createRearm(absentMs)` decide si una lectura confirmada debe contarse: el mismo código no cuenta de nuevo mientras siga a la vista; cuenta cuando salió (≥ `absentMs` sin verse) o cuando llega otro. `helpFor(msWithoutReading, {torchAvailable})` devuelve la pista correspondiente (normal, 8 s, 20 s).
 
 **Acceptance criteria:**
-- [ ] El mismo código a la vista no cuenta dos veces; sale del marco ≥ 700 ms y vuelve → cuenta; otro código → cuenta
-- [ ] `seen()` mantiene vivo el código mientras siga leyéndose aunque no se confirme
-- [ ] `helpFor` devuelve la pista base, la de 8 s ("Probá acercar o alejar…", o "Poca luz: encendé la linterna" si hay linterna) y la de 20 s (ingreso manual)
-- [ ] Constantes con nombre y el porqué en `scanner.ts` (700 ms, 8 s, 20 s)
+- [x] El mismo código a la vista no cuenta dos veces; sale del marco ≥ 700 ms y vuelve → cuenta; otro código → cuenta
+- [x] `seen()` mantiene vivo el código mientras siga leyéndose aunque no se confirme
+- [x] `helpFor` devuelve la pista base, la de 8 s ("Probá acercar o alejar…", o "Poca luz: encendé la linterna" si hay linterna) y la de 20 s (ingreso manual)
+- [x] Constantes con nombre y el porqué en `scanner.ts` (700 ms, 8 s, 20 s)
 
 **Verification:**
-- [ ] Tests pass: `npm test -- src/lib/scan-rearm.test.ts src/lib/scan-help.test.ts`
+- [x] Tests pass: `npm test -- src/lib/scan-rearm.test.ts src/lib/scan-help.test.ts`
 
 **Dependencies:** None
 
@@ -59,7 +61,7 @@ Spec: `SPEC-flow.md` · Plan y decisiones: `tasks/plan-flow.md`
 ---
 
 ## Checkpoint: Reglas
-- [ ] `test`, `lint`, `build`, `test:e2e` y `test:db` en verde
+- [x] `test`, `lint`, `build`, `test:e2e` y `test:db` en verde
 
 ## Phase 2: La pantalla persistente
 

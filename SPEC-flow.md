@@ -77,22 +77,21 @@ Lógica de decisión en funciones puras testeadas sin cámara; los componentes s
 
 ```ts
 // src/lib/scan-rearm.ts
-/** Un código ya contado sólo vuelve a contar cuando salió del marco o llegó otro distinto. */
 export function createRearm(absentMs: number) {
   let counted: string | null = null;
   let lastSeenAt = 0;
   return {
-    /** ¿Esta lectura confirmada debe contarse? */
-    shouldCount(code: string, now: number): boolean {
-      const sameStillInView = code === counted && now - lastSeenAt < absentMs;
+    /** Con CADA lectura válida: si el código ya contado volvió tras una ausencia larga, se re-arma. */
+    observe(code: string, now: number) {
+      if (code !== counted) return;
+      if (now - lastSeenAt >= absentMs) counted = null;
       lastSeenAt = now;
-      if (sameStillInView) return false;
+    },
+    /** ¿Esta confirmación es una presentación nueva? Un código ya contado a la vista: no. */
+    shouldCount(code: string): boolean {
+      if (code === counted) return false;
       counted = code;
       return true;
-    },
-    /** Llamar en cada lectura (aunque no se confirme) para saber que el código sigue a la vista. */
-    seen(code: string, now: number) {
-      if (code === counted) lastSeenAt = now;
     },
   };
 }

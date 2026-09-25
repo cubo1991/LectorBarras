@@ -42,6 +42,17 @@ export const CONFIRM_WINDOW_MS = 1500;
 /** Pausa entre lecturas (zxing por defecto espera 500 ms; para confirmar rápido hace falta más ritmo). */
 export const SCAN_INTERVAL_MS = 100;
 
+/**
+ * Un código ya contado vuelve a contar cuando pasó este tiempo sin leerse (salió del marco).
+ * Corto = se cuentan bien las unidades una tras otra; largo = tolera un parpadeo del enfoque
+ * sin contar dos veces. Valor de partida: se ajusta con el uso real en el Android.
+ */
+export const REARM_ABSENT_MS = 700;
+
+/** Sin ninguna lectura válida: a los 8 s la pista pasa a una acción concreta, a los 20 s al ingreso manual. */
+export const HELP_FIRST_MS = 8000;
+export const HELP_SECOND_MS = 20000;
+
 export function createBarcodeReader() {
   return new BrowserMultiFormatReader(hints);
 }
