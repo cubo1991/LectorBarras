@@ -6,6 +6,14 @@ import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
 import { acceptReading, isValidBarcodeInput, normalizeBarcode } from "@/lib/barcode";
 import { scanFeedback, setMuted, unlockAudio, useMuted } from "@/lib/feedback";
+import {
+  cameraControls,
+  enableContinuousFocus,
+  NO_CONTROLS,
+  setTorch,
+  setZoom,
+  type CameraControls,
+} from "@/lib/scan-camera";
 import { createConfirmer } from "@/lib/scan-confirm";
 import { createDecoder } from "@/lib/scan-decoder";
 import { startScanLoop } from "@/lib/scan-loop";
@@ -34,6 +42,12 @@ export function BarcodeScanner({ onDetected }: Props) {
   // visor queda negro y mudo, indistinguible de una falla.
   const [ready, setReady] = useState(false);
   const muted = useMuted();
+  // Linterna y zoom sólo existen en algunos dispositivos (Android Chrome): se descubren
+  // con getCapabilities() y, si faltan, no se muestra nada.
+  const trackRef = useRef<MediaStreamTrack | null>(null);
+  const [controls, setControls] = useState<CameraControls>(NO_CONTROLS);
+  const [torchOn, setTorchOn] = useState(false);
+  const [zoomValue, setZoomValue] = useState<number | null>(null);
   const [manualCode, setManualCode] = useState("");
   const [manualError, setManualError] = useState<string | null>(null);
 
@@ -54,6 +68,14 @@ export function BarcodeScanner({ onDetected }: Props) {
       video.srcObject = stream;
       await video.play();
       if (cancelled) return;
+
+      const track = stream.getVideoTracks()[0];
+      if (track) {
+        trackRef.current = track;
+        await enableContinuousFocus(track); // sin autofoco permanente los códigos chicos salen borrosos
+        if (cancelled) return;
+        setControls(cameraControls(track));
+      }
 
       // Detector nativo si el navegador lo tiene (Android Chrome); si no, zxing.
       const decode = await createDecoder();
@@ -89,9 +111,24 @@ export function BarcodeScanner({ onDetected }: Props) {
       cancelled = true;
       stopLoop?.();
       stream?.getTracks().forEach((track) => track.stop());
+      trackRef.current = null;
       video.srcObject = null;
     };
   }, [onDetected]);
+
+  async function handleTorch() {
+    const track = trackRef.current;
+    if (!track) return;
+    const next = !torchOn;
+    if (await setTorch(track, next)) setTorchOn(next);
+  }
+
+  async function handleZoom(requested: number) {
+    const track = trackRef.current;
+    if (!track || !controls.zoom) return;
+    const applied = await setZoom(track, controls.zoom, requested);
+    if (applied !== null) setZoomValue(applied);
+  }
 
   function handleManualSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -135,13 +172,30 @@ export function BarcodeScanner({ onDetected }: Props) {
         </div>
       )}
       {!fatalError && (
-        <Button
-          variant="secondary"
-          onClick={() => setMuted(!muted)}
-          className="self-end text-sm"
-        >
-          {muted ? "Sonido: silenciado" : "Sonido: activado"}
-        </Button>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          {controls.zoom && (
+            <label className="flex min-h-11 min-w-40 flex-1 items-center gap-2 text-sm">
+              Zoom
+              <input
+                type="range"
+                className="h-11 min-w-0 flex-1"
+                min={controls.zoom.min}
+                max={controls.zoom.max}
+                step={controls.zoom.step}
+                value={zoomValue ?? controls.zoom.value}
+                onChange={(e) => void handleZoom(Number(e.target.value))}
+              />
+            </label>
+          )}
+          {controls.torch && (
+            <Button variant="secondary" onClick={() => void handleTorch()} className="text-sm">
+              {torchOn ? "Linterna: encendida" : "Linterna: apagada"}
+            </Button>
+          )}
+          <Button variant="secondary" onClick={() => setMuted(!muted)} className="ml-auto text-sm">
+            {muted ? "Sonido: silenciado" : "Sonido: activado"}
+          </Button>
+        </div>
       )}
       {fatalError && <Alert>{fatalError}</Alert>}
       {!fatalError && readWarning && <Alert tone="warning">{readWarning}</Alert>}

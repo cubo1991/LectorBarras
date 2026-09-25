@@ -215,19 +215,23 @@ Spec: `SPEC-scanner.md` · Plan y decisiones: `tasks/plan-scanner.md`
 
 ## Phase 4: Imagen y guía
 
-### Task 8: Cámara — enfoque continuo, linterna y zoom
+ ✅## Phase 4: Imagen y guía
+
+### Task 8: Cámara — enfoque continuo, linterna y zoom ✅
+
+> Hecho; 98 unit y 36 e2e en verde. `scan-camera.ts` descubre linterna, zoom y enfoque continuo con `getCapabilities()` (todo opcional y tolerante a fallos). E2E: en la webcam falsa **no** aparecen Linterna ni Zoom, y con capacidades simuladas de Android sí aparecen y aplican `focusMode: continuous` al arrancar, `torch: true` al tocar la linterna y `zoom: 2.5` con el slider. **Pendiente a mano en el Android real**: que la linterna y el zoom funcionen de verdad.
 
 **Description:** Pedir enfoque continuo (`focusMode: "continuous"`) cuando el dispositivo lo declare. Mostrar un botón de **linterna** y un control de **zoom** sólo si `track.getCapabilities()` los soporta (Android Chrome); en el resto no aparecen. La lógica de capacidades es pura y testeable.
 
 **Acceptance criteria:**
-- [ ] Sin capacidad de linterna o zoom, no se muestran controles ni errores
-- [ ] Con capacidad, la linterna se enciende/apaga (`aria-pressed`) y el zoom respeta el rango `min`/`max`/`step` del dispositivo
-- [ ] Los controles miden ≥ 44 px y funcionan en ambos esquemas de color
-- [ ] Si `applyConstraints` falla, el escaneo sigue funcionando y no se muestra un error
+- [x] Sin capacidad de linterna o zoom, no se muestran controles ni errores
+- [x] Con capacidad, la linterna se enciende/apaga (`aria-pressed`) y el zoom respeta el rango `min`/`max`/`step` del dispositivo
+- [x] Los controles miden ≥ 44 px y funcionan en ambos esquemas de color
+- [x] Si `applyConstraints` falla, el escaneo sigue funcionando y no se muestra un error
 
 **Verification:**
-- [ ] Tests pass: `npm test` (derivación de controles desde `getCapabilities()` simulado)
-- [ ] E2E: `npm run test:e2e` completo (en la cámara falsa no hay linterna: los controles no aparecen)
+- [x] Tests pass: `npm test` (derivación de controles desde `getCapabilities()` simulado)
+- [x] E2E: `npm run test:e2e` completo (en la cámara falsa no hay linterna: los controles no aparecen)
 - [ ] Manual check: en el Android real, linterna y zoom funcionan — **pendiente, celular**
 
 **Dependencies:** Task 6

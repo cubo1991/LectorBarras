@@ -135,3 +135,49 @@ test("con BarcodeDetector nativo (Android) se usa ese motor y un UPC-A queda nor
   });
   expect(await page.evaluate(() => (window as unknown as Record<string, number>).__nativeDetectCalls)).toBeGreaterThan(2);
 });
+
+test("una cámara sin linterna ni zoom (webcam) no muestra esos controles", async ({ cameraPage }) => {
+  const page = await cameraPage("outside");
+  await registerAndLogin(page);
+
+  await page.goto("/scan");
+  await expect(page.getByText("Iniciando cámara…")).toBeHidden({ timeout: READ_TIMEOUT });
+
+  await expect(page.getByRole("button", { name: /Sonido/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Linterna/ })).toHaveCount(0);
+  await expect(page.getByRole("slider", { name: "Zoom" })).toHaveCount(0);
+});
+
+test("con linterna y zoom declarados (Android) aparecen y aplican las constraints", async ({ cameraPage }) => {
+  const page = await cameraPage("outside");
+
+  // Chromium de escritorio no declara torch/zoom: se simula la cámara de un Android.
+  await page.addInitScript(() => {
+    const w = window as unknown as { __constraints: unknown[] };
+    w.__constraints = [];
+    const proto = MediaStreamTrack.prototype as unknown as Record<string, unknown>;
+    proto.getCapabilities = () => ({ torch: true, zoom: { min: 1, max: 4, step: 0.5 }, focusMode: ["manual", "continuous"] });
+    const getSettings = MediaStreamTrack.prototype.getSettings;
+    proto.getSettings = function (this: MediaStreamTrack) {
+      return { ...getSettings.call(this), zoom: 1 };
+    };
+    proto.applyConstraints = (constraints: unknown) => {
+      w.__constraints.push(constraints);
+      return Promise.resolve();
+    };
+  });
+  await registerAndLogin(page);
+  await page.goto("/scan");
+
+  const applied = () => page.evaluate(() => (window as unknown as { __constraints: unknown[] }).__constraints);
+
+  // El enfoque continuo se pide solo, sin que el usuario haga nada.
+  await expect.poll(applied).toContainEqual({ advanced: [{ focusMode: "continuous" }] });
+
+  await page.getByRole("button", { name: "Linterna: apagada" }).click();
+  await expect(page.getByRole("button", { name: "Linterna: encendida" })).toBeVisible();
+  expect(await applied()).toContainEqual({ advanced: [{ torch: true }] });
+
+  await page.getByRole("slider", { name: "Zoom" }).fill("2.5");
+  await expect.poll(applied).toContainEqual({ advanced: [{ zoom: 2.5 }] });
+});
