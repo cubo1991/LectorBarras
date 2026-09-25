@@ -1,11 +1,18 @@
-type AlertProps = { children: React.ReactNode; className?: string };
+type Tone = "danger" | "warning";
 
-/** Mensaje de error. Lleva ícono además de color: el color no es la única señal. */
-export function Alert({ children, className = "" }: AlertProps) {
+const TONES: Record<Tone, string> = {
+  danger: "border-danger text-danger",
+  warning: "border-warning text-warning",
+};
+
+type AlertProps = { children: React.ReactNode; tone?: Tone; className?: string };
+
+/** Mensaje de error o aviso. Lleva ícono además de color: el color no es la única señal. */
+export function Alert({ children, tone = "danger", className = "" }: AlertProps) {
   return (
     <div
       role="alert"
-      className={`flex items-start gap-2 rounded-control border border-danger bg-surface p-3 text-sm text-danger ${className}`}
+      className={`flex items-start gap-2 rounded-control border bg-surface p-3 text-sm ${TONES[tone]} ${className}`}
     >
       <svg aria-hidden viewBox="0 0 20 20" className="mt-0.5 size-4 shrink-0" fill="currentColor">
         <path d="M10 1.5 19 17.5H1L10 1.5Zm-1 5.5v5h2V7H9Zm0 6.5v2h2v-2H9Z" />

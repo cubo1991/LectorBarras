@@ -1,6 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { Alert } from "@/components/ui/Alert";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Field } from "@/components/ui/Field";
 import { createProduct, type Product } from "@/lib/actions/products";
 
 type Props = {
@@ -31,21 +35,22 @@ export function NewProductForm({ barcode, onCreated }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-3 border p-4">
-      <p className="text-sm text-gray-600">Código: {barcode}</p>
-      <input name="name" placeholder="Nombre del producto" required className="border p-2" />
-      <input
-        name="stock"
-        type="number"
-        min={0}
-        placeholder="Stock inicial"
-        required
-        className="border p-2"
-      />
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      <button type="submit" className="min-h-11 bg-black p-2 text-white">
-        Dar de alta
-      </button>
-    </form>
+    <Card>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <p className="text-sm text-muted">Código: {barcode}</p>
+        <Field label="Nombre del producto" name="name" placeholder="Nombre del producto" required />
+        <Field
+          label="Stock inicial"
+          name="stock"
+          type="number"
+          inputMode="numeric"
+          min={0}
+          placeholder="Stock inicial"
+          required
+        />
+        {error && <Alert>{error}</Alert>}
+        <Button type="submit">Dar de alta</Button>
+      </form>
+    </Card>
   );
 }

@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Alert } from "@/components/ui/Alert";
+import { Button } from "@/components/ui/Button";
+import { Field } from "@/components/ui/Field";
 import {
   CAMERA_CONSTRAINTS,
   cameraErrorMessage,
@@ -22,6 +25,9 @@ export function BarcodeScanner({ onDetected }: Props) {
   // No fatal: la cámara anda pero un frame falló de forma no esperada → avisamos
   // sin desmontar el video, porque desmontarlo deja al reader sin destino.
   const [readWarning, setReadWarning] = useState<string | null>(null);
+  // El video puede tardar en arrancar (permiso, cámara lenta): sin este estado el
+  // visor queda negro y mudo, indistinguible de una falla.
+  const [ready, setReady] = useState(false);
   const [manualCode, setManualCode] = useState("");
   const [manualError, setManualError] = useState<string | null>(null);
 
@@ -84,37 +90,46 @@ export function BarcodeScanner({ onDetected }: Props) {
   return (
     <div className="flex flex-col gap-4">
       {!fatalError && (
-        <video ref={videoRef} className="w-full rounded bg-black" muted playsInline />
+        <div className="relative aspect-video overflow-hidden rounded-control bg-black">
+          <video
+            ref={videoRef}
+            className="size-full object-cover"
+            muted
+            playsInline
+            onPlaying={() => setReady(true)}
+          />
+          {/* Marco de encuadre: orienta dónde poner el código. Decorativo. */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-[10%] inset-y-[25%] rounded-control border-2 border-white/80"
+          />
+          {!ready && (
+            <p role="status" className="absolute inset-0 flex items-center justify-center text-sm text-white">
+              Iniciando cámara…
+            </p>
+          )}
+        </div>
       )}
-      {fatalError && (
-        <p role="alert" className="text-sm text-red-600">
-          {fatalError}
-        </p>
-      )}
-      {!fatalError && readWarning && (
-        <p role="alert" className="text-sm text-amber-700">
-          {readWarning}
-        </p>
-      )}
+      {fatalError && <Alert>{fatalError}</Alert>}
+      {!fatalError && readWarning && <Alert tone="warning">{readWarning}</Alert>}
 
-      <form onSubmit={handleManualSubmit} className="flex flex-wrap gap-2">
-        <input
-          type="text"
-          inputMode="numeric"
-          placeholder="Ingresar código manualmente"
-          value={manualCode}
-          onChange={(e) => setManualCode(e.target.value)}
-          className="min-w-0 flex-1 border p-2"
-        />
-        <button type="submit" className="min-h-11 bg-black px-4 py-2 text-white">
+      <form onSubmit={handleManualSubmit} className="flex items-start gap-2">
+        <div className="min-w-0 flex-1">
+          <Field
+            label="Código de barras"
+            type="text"
+            name="manual-code"
+            inputMode="numeric"
+            placeholder="Ingresar código manualmente"
+            value={manualCode}
+            onChange={(e) => setManualCode(e.target.value)}
+            error={manualError ?? undefined}
+          />
+        </div>
+        <Button type="submit" className="mt-6">
           Buscar
-        </button>
+        </Button>
       </form>
-      {manualError && (
-        <p role="alert" className="text-sm text-red-600">
-          {manualError}
-        </p>
-      )}
     </div>
   );
 }
